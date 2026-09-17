@@ -15,7 +15,7 @@ import { listEvidenceEntries, appendEntry, syncTime } from './services/evidence'
 import { computePayloadHash } from '@openfield/core';
 import { runVerify } from './services/verify';
 import { purgeSubject } from './services/purge';
-import { exportBackup, makeCitation } from './services/export';
+import { exportBackup, makeCitation, restoreBackup } from './services/export';
 import { clearMockData, loadMockData, mockFootprint } from './services/mock';
 import { getParticipant, listConsentsByEncounter, listMemos } from './services/repos';
 
@@ -27,6 +27,11 @@ const ConfirmInput = z.object({
 });
 const PurgeInput = z.object({ pseudonym: z.string().min(1), confirmToken: z.string() });
 const BackupInput = z.object({ passphrase: z.string().min(8) });
+const RestoreInput = z.object({
+  backupPath: z.string().min(1),
+  backupPassphrase: z.string().min(8),
+  vaultPassphrase: z.string().min(8),
+});
 const ListInput = z.object({ status: z.enum(['pending', 'ingested', 'quarantined', 'rejected']).optional() });
 const ItemInput = z.object({ itemId: z.string().min(1) });
 const CitationInput = z.object({ artifactId: z.string().min(1) });
@@ -101,6 +106,15 @@ export function createIpcHandlers(
         const outPath = join(state.paths.backupsDir, `backup-${stamp}.ofbackup`);
         exportBackup(state.getDb(), state.paths, passphrase, outPath);
         return { outPath };
+      }),
+    'backup:restore': (p) =>
+      wrap(() => {
+        if (state.unlocked) {
+          throw new Error('资料库已解锁：恢复会替换整个资料库，请在启动后的锁定界面（未建库/未开库）时操作');
+        }
+        const input = RestoreInput.parse(p);
+        restoreBackup({ ...input, home: state.home });
+        return { home: state.home };
       }),
     'archive:events': () => wrap(() => listFieldEvents(state.getDb())),
     'archive:encounters': (p) =>

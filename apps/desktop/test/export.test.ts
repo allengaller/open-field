@@ -1,14 +1,16 @@
 import { describe, it, expect, afterAll, beforeAll } from 'vitest';
-import { existsSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import AdmZip from 'adm-zip';
 import { ConsentRecord, Encounter, FieldEvent, verifyChain } from '@openfield/core';
 import { cleanupTestVault, makeTestVault, TEST_PASSPHRASE } from './helpers';
-import { ingestFile } from '../src/main/services/ingest';
+import { ingestFile, sha256File } from '../src/main/services/ingest';
 import { listEvidenceEntries } from '../src/main/services/evidence';
-import { insertConsentRecord, insertEncounter, insertFieldEvent, withdrawConsent } from '../src/main/services/repos';
-import { ExportError, exportBackup, makeCitation, readBackup } from '../src/main/services/export';
+import { getArtifact, insertConsentRecord, insertEncounter, insertFieldEvent, withdrawConsent } from '../src/main/services/repos';
+import { ExportError, exportBackup, makeCitation, readBackup, restoreBackup } from '../src/main/services/export';
+import { openVault, resolveVaultPaths } from '../src/main/services/vault';
+import { runVerify } from '../src/main/services/verify';
 
 const { db, paths, home } = makeTestVault();
 const fixDir = mkdtempSync(join(tmpdir(), 'of-exp-'));
@@ -123,5 +125,72 @@ describe('exportBackup / readBackup', () => {
     exportBackup(db, paths, TEST_PASSPHRASE, retryPath);
     expect(existsSync(`${retryPath}.tmp-vault.db`)).toBe(false);
     expect(existsSync(retryPath)).toBe(true);
+  });
+});
+
+describe('restoreBackup', () => {
+  const backupPath = join(fixDir, 'loop.ofbackup');
+  let ingestedId = '';
+
+  beforeAll(async () => {
+    const r = await ingestFixture('r1.wav', T0 + 300_000, 'enc-1');
+    ingestedId = r.artifact.id;
+    exportBackup(db, paths, 'backup-pass-123', backupPath);
+  });
+
+  it('备份 → 恢复到新目录 → 重开资料库：数据、封存件、只读位与证据链完整（闭环）', async () => {
+    const target = mkdtempSync(join(tmpdir(), 'of-restore-'));
+    try {
+      restoreBackup({ backupPath, backupPassphrase: 'backup-pass-123', vaultPassphrase: TEST_PASSPHRASE, home: target });
+      const targetPaths = resolveVaultPaths(target);
+      const reopened = openVault(targetPaths, TEST_PASSPHRASE, false);
+      try {
+        const restored = getArtifact(reopened, ingestedId);
+        expect(restored).toBeTruthy();
+        expect(restored!.originalPath).toBe(join(targetPaths.originalsRoot, ingestedId, 'v1.wav')); // original_path 已重写到新家
+        expect(await sha256File(restored!.originalPath)).toBe(restored!.sha256);
+        expect(statSync(restored!.originalPath).mode & 0o222).toBe(0); // 只读封存保持
+        const entries = listEvidenceEntries(reopened);
+        expect(verifyChain(entries).ok).toBe(true);
+        expect(entries.length).toBe(listEvidenceEntries(db).length);
+        expect((await runVerify(reopened, targetPaths.originalsRoot)).issues).toEqual([]); // 校验服务在新家零问题
+      } finally {
+        reopened.close();
+      }
+    } finally {
+      rmSync(target, { recursive: true, force: true });
+    }
+  });
+
+  it('目标目录已有资料库 → 拒绝覆盖', () => {
+    const occupied = mkdtempSync(join(tmpdir(), 'of-restore-'));
+    try {
+      writeFileSync(join(occupied, 'vault.db'), 'existing');
+      expect(() => restoreBackup({ backupPath, backupPassphrase: 'backup-pass-123', vaultPassphrase: TEST_PASSPHRASE, home: occupied })).toThrow(/拒绝覆盖/);
+    } finally {
+      rmSync(occupied, { recursive: true, force: true });
+    }
+  });
+
+  it('备份口令错误 → 恢复失败，目标目录不落任何文件', () => {
+    const target = mkdtempSync(join(tmpdir(), 'of-restore-'));
+    try {
+      expect(() => restoreBackup({ backupPath, backupPassphrase: 'wrong-backup-9', vaultPassphrase: TEST_PASSPHRASE, home: target })).toThrow();
+      expect(existsSync(join(target, 'vault.db'))).toBe(false);
+      expect(existsSync(join(target, 'originals'))).toBe(false);
+    } finally {
+      rmSync(target, { recursive: true, force: true });
+    }
+  });
+
+  it('资料库口令错误 → 恢复失败，目标目录不落任何文件', () => {
+    const target = mkdtempSync(join(tmpdir(), 'of-restore-'));
+    try {
+      expect(() => restoreBackup({ backupPath, backupPassphrase: 'backup-pass-123', vaultPassphrase: 'wrong-vault-9', home: target })).toThrow();
+      expect(existsSync(join(target, 'vault.db'))).toBe(false);
+      expect(existsSync(join(target, 'originals'))).toBe(false);
+    } finally {
+      rmSync(target, { recursive: true, force: true });
+    }
   });
 });

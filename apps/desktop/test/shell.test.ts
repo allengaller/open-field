@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { cleanupTestVault } from './helpers';
 import { listInboxItems } from '../src/main/services/repos';
+import { exportBackup } from '../src/main/services/export';
 import { VaultError } from '../src/main/services/vault';
 import { AppState } from '../src/main/state';
 import { createIpcHandlers } from '../src/main/ipc';
@@ -82,6 +83,30 @@ describe('createIpcHandlers 端到端（main 进程同款调用序列）', () =>
     const bad = await h['events:create']({ oops: true });
     expect(bad).toEqual({ ok: false, error: expect.stringMatching(/.+/) });
     state.close();
+  });
+
+  it('backup:restore：解锁时拒绝；覆盖已有库拒绝；空目录恢复成功且数据随备份回来', async () => {
+    const state = new AppState(join(home, 's7'));
+    const h = createIpcHandlers(state);
+    state.createVault('passphrase-1234');
+    expect(await h['events:create']({ id: 'evt-r', date: '2026-09-17', cityCode: 'HZS', locationName: '曹县' })).toMatchObject({ ok: true });
+    const backupPath = join(state.paths.backupsDir, 'rt.ofbackup');
+    exportBackup(state.getDb(), state.paths, 'backup-pass-123', backupPath);
+
+    const refused = await h['backup:restore']({ backupPath, backupPassphrase: 'backup-pass-123', vaultPassphrase: 'passphrase-1234' });
+    expect(refused).toMatchObject({ ok: false }); // 解锁状态恢复 = 覆盖正在使用的库，必须拒绝
+
+    state.close();
+    const covered = await h['backup:restore']({ backupPath, backupPassphrase: 'backup-pass-123', vaultPassphrase: 'passphrase-1234' });
+    expect(covered).toMatchObject({ ok: false, error: expect.stringMatching(/拒绝覆盖/) }); // home 已有 vault.db
+
+    const fresh = new AppState(join(home, 's7-fresh'));
+    const restored = await createIpcHandlers(fresh)['backup:restore']({ backupPath, backupPassphrase: 'backup-pass-123', vaultPassphrase: 'passphrase-1234' });
+    expect(restored).toMatchObject({ ok: true });
+    expect(fresh.hasVault()).toBe(true);
+    fresh.openVault('passphrase-1234');
+    expect(fresh.status().events).toBe(1); // 备份里的登记随恢复回来
+    fresh.close();
   });
 });
 

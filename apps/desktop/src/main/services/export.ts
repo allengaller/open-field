@@ -2,11 +2,13 @@ import type Database from 'better-sqlite3-multiple-ciphers';
 import { computePayloadHash, makeRefId, type ArtifactType, type ConsentTemplateType } from '@openfield/core';
 import AdmZip from 'adm-zip';
 import { createCipheriv, createDecipheriv, randomBytes, scryptSync } from 'node:crypto';
-import { existsSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import {
+  chmodSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, renameSync, rmSync, writeFileSync,
+} from 'node:fs';
+import { basename, dirname, join } from 'node:path';
 import { appendEntry } from './evidence';
 import { getArtifact, getEncounter, getFieldEvent, setArtifactRefId, type ArtifactRecord } from './repos';
-import { backupVault, type VaultPaths } from './vault';
+import { backupVault, openVault, resolveVaultPaths, type VaultPaths } from './vault';
 
 export class ExportError extends Error {
   constructor(readonly code: 'no-encounter' | 'no-event' | 'no-consent' | 'io', message: string) {
@@ -111,4 +113,49 @@ export function readBackup(backupPath: string, passphrase: string): Buffer {
   const decipher = createDecipheriv('aes-256-gcm', scryptSync(passphrase, salt, 32), iv);
   decipher.setAuthTag(tag);
   return Buffer.concat([decipher.update(raw.subarray(49)), decipher.final()]);
+}
+
+// 恢复闭环：解密解包 → 包内库用「资料库口令」开启（校验口令）并把 original_path 重写到新家
+// （库里存绝对路径，换机/换目录后必须改指新 originals）→ originals 先落位并恢复只读位，
+// vault.db 最后原子落位——它的存在即「恢复完成」标记，任何中断都不会留下看似完整的库。
+export function restoreBackup(input: {
+  backupPath: string;
+  backupPassphrase: string;
+  vaultPassphrase: string;
+  home: string;
+}): void {
+  const target = resolveVaultPaths(input.home);
+  if (existsSync(target.vaultDb)) {
+    throw new ExportError('io', `目标目录已存在资料库，拒绝覆盖：${target.vaultDb}`);
+  }
+  const zip = new AdmZip(readBackup(input.backupPath, input.backupPassphrase));
+  if (!zip.getEntry('vault.db')) throw new ExportError('io', '备份包内缺少 vault.db，文件不完整或损坏');
+  const staging = mkdtempSync(join(dirname(input.home), 'of-restore-')); // 与 home 同卷，rename 才是原子
+  try {
+    zip.extractAllTo(staging, true);
+    const staged = openVault(resolveVaultPaths(staging), input.vaultPassphrase, false);
+    try {
+      const rows = staged.prepare('SELECT id, original_path FROM artifacts').all() as { id: string; original_path: string }[];
+      const update = staged.prepare('UPDATE artifacts SET original_path = ? WHERE id = ?');
+      staged.transaction(() => {
+        for (const r of rows) update.run(join(target.originalsRoot, r.id, basename(r.original_path)), r.id);
+      })();
+    } finally {
+      staged.close();
+    }
+
+    mkdirSync(target.originalsRoot, { recursive: true });
+    const stagedOriginals = join(staging, 'originals');
+    if (existsSync(stagedOriginals)) {
+      for (const id of readdirSync(stagedOriginals)) {
+        const dest = join(target.originalsRoot, id);
+        if (existsSync(dest)) throw new ExportError('io', `originals 已存在同名目录，拒绝覆盖：${id}`);
+        renameSync(join(stagedOriginals, id), dest);
+        for (const f of readdirSync(dest)) chmodSync(join(dest, f), 0o444); // 恢复只读封存位
+      }
+    }
+    renameSync(join(staging, 'vault.db'), target.vaultDb);
+  } finally {
+    rmSync(staging, { recursive: true, force: true });
+  }
 }
