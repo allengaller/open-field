@@ -87,7 +87,7 @@ export function createIpcHandlers(
         });
       }),
     'inbox:reject': (p) => wrap(() => rejectInboxItem(state.getDb(), ItemInput.parse(p).itemId)),
-    'verify:run': () => wrap(() => runVerify(state.getDb(), state.paths.originalsRoot)),
+    'verify:run': () => wrap(() => runVerify(state.getDb(), state.paths.originalsRoot, { anchorPath: state.paths.chainAnchor })),
     'citation:make': (p) =>
       wrap(() => makeCitation(state.getDb(), { artifactId: CitationInput.parse(p).artifactId, actor: state.deviceId })),
     'purge:subject': (p) =>

@@ -140,8 +140,10 @@ describe('restoreBackup', () => {
 
   it('备份 → 恢复到新目录 → 重开资料库：数据、封存件、只读位与证据链完整（闭环）', async () => {
     const target = mkdtempSync(join(tmpdir(), 'of-restore-'));
+    writeFileSync(join(target, 'chain-anchor.json'), '{"head":"stale-anchor-from-lost-vault"}');
     try {
       restoreBackup({ backupPath, backupPassphrase: 'backup-pass-123', vaultPassphrase: TEST_PASSPHRASE, home: target });
+      expect(existsSync(join(target, 'chain-anchor.json'))).toBe(false); // A23：旧锚点指向丢失库的链头，必须清除防误报
       const targetPaths = resolveVaultPaths(target);
       const reopened = openVault(targetPaths, TEST_PASSPHRASE, false);
       try {

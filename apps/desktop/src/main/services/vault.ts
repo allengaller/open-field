@@ -9,6 +9,8 @@ export interface VaultPaths {
   inboxDir: string;
   quarantineDir: string;
   backupsDir: string;
+  /** 链头锚点（A23）：与库分离存储，VerifyService 校验成功后写入，链尾截断靠它与自洽链区分 */
+  chainAnchor: string;
 }
 
 export function resolveVaultPaths(home: string): VaultPaths {
@@ -18,6 +20,7 @@ export function resolveVaultPaths(home: string): VaultPaths {
     inboxDir: join(home, 'inbox'),
     quarantineDir: join(home, 'quarantine'),
     backupsDir: join(home, 'backups'),
+    chainAnchor: join(home, 'chain-anchor.json'),
   };
 }
 

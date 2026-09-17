@@ -130,6 +130,7 @@ export function restoreBackup(input: {
   }
   const zip = new AdmZip(readBackup(input.backupPath, input.backupPassphrase));
   if (!zip.getEntry('vault.db')) throw new ExportError('io', '备份包内缺少 vault.db，文件不完整或损坏');
+  rmSync(target.chainAnchor, { force: true }); // A23：旧锚点指向丢失库的链头，保留会在恢复后误报 anchor-mismatch
   const staging = mkdtempSync(join(dirname(input.home), 'of-restore-')); // 与 home 同卷，rename 才是原子
   try {
     zip.extractAllTo(staging, true);

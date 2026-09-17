@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { chmodSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { cleanupTestVault, makeTestVault } from './helpers';
@@ -26,6 +26,72 @@ describe('runVerify', () => {
       expect(report.chainBrokenAt).toBeNull();
       expect(report.issues).toEqual([]);
       expect(report.artifactCount).toBe(1);
+    } finally {
+      cleanupTestVault(home);
+    }
+  });
+
+  it('未启用锚点（不传 anchorPath）→ 报告不含 anchor-* 条目，行为不变', async () => {
+    const { db, originalsRoot, home } = await seededVault();
+    try {
+      const report = await runVerify(db, originalsRoot);
+      expect(report.issues.filter((i) => i.kind.startsWith('anchor-'))).toEqual([]);
+    } finally {
+      cleanupTestVault(home);
+    }
+  });
+
+  it('链头锚点：首次校验静默建立；链尾截断（内部自洽）在下次校验中可检出（Plan 1 终审义务）', async () => {
+    const { db, originalsRoot, home } = await seededVault();
+    const anchorPath = join(home, 'chain-anchor.json');
+    try {
+      const first = await runVerify(db, originalsRoot, { anchorPath });
+      expect(first.issues).toEqual([]); // 首次校验建立锚点，不产生噪音
+      expect(existsSync(anchorPath)).toBe(true);
+
+      // 绕过 append-only 触发器截掉链尾：截断后的链内部仍自洽，chainOk 发现不了
+      const last = db.prepare('SELECT MAX(seq) AS seq FROM evidence_log').get() as { seq: number };
+      db.exec('DROP TRIGGER evidence_log_no_delete;');
+      db.prepare('DELETE FROM evidence_log WHERE seq = ?').run(last.seq);
+
+      const second = await runVerify(db, originalsRoot, { anchorPath });
+      expect(second.chainOk).toBe(true); // 这正是锚点存在的理由：链自洽 ≠ 链完整
+      expect(second.issues).toEqual([expect.objectContaining({ kind: 'anchor-mismatch' })]);
+    } finally {
+      cleanupTestVault(home);
+    }
+  });
+
+  it('锚点之后正常追加 → 不算 mismatch，锚点刷新到新链头', async () => {
+    const { db, originalsRoot, home } = await seededVault();
+    const anchorPath = join(home, 'chain-anchor.json');
+    const fixDir = mkdtempSync(join(tmpdir(), 'of-vfy-'));
+    try {
+      await runVerify(db, originalsRoot, { anchorPath });
+      const src = join(fixDir, 'b.wav');
+      writeFileSync(src, 'W'.repeat(256));
+      await ingestFile(db, originalsRoot, { sourcePath: src, mime: 'audio/wav', type: 'audio', deviceId: 'desktop' });
+
+      const report = await runVerify(db, originalsRoot, { anchorPath });
+      expect(report.issues).toEqual([]);
+      const last = db.prepare('SELECT entry_hash FROM evidence_log ORDER BY seq DESC LIMIT 1').get() as { entry_hash: string };
+      const anchor = JSON.parse(readFileSync(anchorPath, 'utf8')) as { head: string };
+      expect(anchor.head).toBe(last.entry_hash);
+    } finally {
+      rmSync(fixDir, { recursive: true, force: true });
+      cleanupTestVault(home);
+    }
+  });
+
+  it('锚点文件损坏 → anchor-unreadable，且不被静默覆写（保留现场）', async () => {
+    const { db, originalsRoot, home } = await seededVault();
+    const anchorPath = join(home, 'chain-anchor.json');
+    try {
+      await runVerify(db, originalsRoot, { anchorPath });
+      writeFileSync(anchorPath, 'corrupted{');
+      const report = await runVerify(db, originalsRoot, { anchorPath });
+      expect(report.issues).toEqual([expect.objectContaining({ kind: 'anchor-unreadable' })]);
+      expect(readFileSync(anchorPath, 'utf8')).toBe('corrupted{');
     } finally {
       cleanupTestVault(home);
     }
