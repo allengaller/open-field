@@ -5,6 +5,28 @@ OpenField 的所有显著变更记录于此。体例遵循 [Keep a Changelog](ht
 
 ## [Unreleased]
 
+### Fixed
+- `clearMockData` deletion of sealed directories now meets the same path-containment fence as PIPL purge (checked before any deletion), closing a traversal gap where a corrupted DB row could delete outside `originals/`.
+  `clearMockData` 删除封存目录补齐与 PIPL 清除同款的路径围栏（先校验后删除），封堵损坏行借路径穿越删到 `originals/` 之外的缺口。
+- Inbox items the user explicitly rejected no longer resurrect as pending on the next scan; rejection is final for that path.
+  被用户明确拒绝的收件项不再在下次扫描时复活为待办——拒绝对该路径是终局决定。
+- Interview detail now lists only memos linked to that encounter's artifacts (previously the full library-wide memo list was returned on every detail page).
+  访谈详情页只列出关联到该访谈采集物的备忘录（此前返回的是全馆备忘录列表）。
+
+### Changed
+- Backup container upgraded to **OFBK2**: KDF parameters (scrypt N=2^17, r=8, p=1) are stored explicitly in the header with reader-side sanity clamps; legacy OFBK1 containers remain permanently readable; export now writes atomically via temp+rename so a crash cannot leave a half-written file blocking retries.
+  备份容器升级为 **OFBK2**：KDF 参数（scrypt N=2^17、r=8、p=1）显式写入容器头并带读取侧夹限；旧 OFBK1 容器永久可读；导出改为临时文件 + rename 原子落位，崩溃不再留下阻塞重试的半截文件。
+- External links opened from the app are now restricted to a host allowlist (project site + GitHub) instead of any https URL.
+  应用内打开的外链由「任意 https」收紧为主机白名单（项目官网 + GitHub）。
+- Renderer no longer hand-copies entity interfaces: UI payload types live in `shared/types.ts` and entity types are imported from `@openfield/core`, eliminating drift as entities evolve.
+  renderer 不再手工复制实体 interface：UI 载荷类型收敛至 `shared/types.ts`，实体类型直接取自 `@openfield/core`，实体演进不再产生类型漂移。
+
+### Added
+- Backup restore closed loop: `restoreBackup` decrypts an OFBK container, rewrites stored absolute `original_path` values to the new home, re-seals originals read-only, and lands `vault.db` atomically last; new `backup:restore` IPC channel (locked-state only, refuses to overwrite an existing vault); closed-loop test reopens the restored vault and runs full verification clean.
+  备份恢复闭环：`restoreBackup` 解密容器、把库内绝对路径 `original_path` 重写到新家、恢复原始件只读封存、`vault.db` 最后原子落位；新增 `backup:restore` IPC 通道（仅锁定状态可用、拒绝覆盖已有资料库）；闭环测试验证「恢复出的库可重开且校验零问题」。
+- External chain-head anchor (`chain-anchor.json`): verification now seeds/refreshes an out-of-database anchor of the last verified chain head, so tail truncation of the evidence log — internally self-consistent, invisible to chain replay alone — is detected and reported (`anchor-mismatch`); a corrupted anchor is reported and never silently rewritten. Discharges the obligation recorded at the Plan 1 final review; limitation (resettable by a disk-level adversary) documented in the threat model.
+  链头外置锚点（`chain-anchor.json`）：校验通过后写入/刷新库外锚点，链尾截断（内部自洽、链重放检不出）由此可检出并报告 `anchor-mismatch`；锚点损坏只报告不覆写。兑现 Plan 1 终审遗留义务；局限（磁盘级对手可重置）已记入威胁模型。
+
 ### Changed
 - Desktop workbench redesigned as a professional tool-platform UI (Cobalt design system: cool engineered paper, electric-cobalt signal accent, Space Grotesk + Inter + JetBrains Mono bundled locally for offline use; 4pt scale, 8-state interactions, reduced-motion support). All e2e element IDs and data contracts preserved.
   桌面工作台重构为专业工具平台 UI（Cobalt 设计系统：冷调工程纸面、电钴蓝信号色、本地打包字体离线可用；4pt 间距、八态交互、动效降级）。e2e 元素 ID 与数据契约原样保留。
