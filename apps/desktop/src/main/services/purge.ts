@@ -38,6 +38,8 @@ export function purgeSubject(
   };
 
   // 先删文件再删库：若 DB 事务失败，隐私已消失、登记残留会被 verify 以 original-missing 可见报告
+  // 不回收 ref_sequences 序号水位（见 export.makeCitation）：RefId 一经分配永不复用，
+  // 被清除材料的编号保持「已烧毁」——否则重新签发会复用已发表引用号或撞唯一索引。
   for (const a of artifacts) {
     const dir = join(originalsRoot, a.id);
     const rel = relative(originalsRoot, dir);

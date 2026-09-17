@@ -1,7 +1,7 @@
 <!--
 Titles 命名: `<type>: <summary>` — types: feat | fix | docs | refactor | test | chore
-Reviewers enforce docs/ETHICS_CHECKLIST.md; an unchecked applicable item blocks merge.
-评审者依据 docs/ETHICS_CHECKLIST.md 把关；适用项未勾选即阻断合入。
+Reviewers enforce docs/工程/伦理自查.md; an unchecked applicable item blocks merge.
+评审者依据 docs/工程/伦理自查.md 把关；适用项未勾选即阻断合入。
 -->
 
 ## What & Why 做了什么、为什么
@@ -17,8 +17,8 @@ Reviewers enforce docs/ETHICS_CHECKLIST.md; an unchecked applicable item blocks 
 
 ## Ethics Self-Review 伦理自查
 
-<!-- Source of truth: docs/ETHICS_CHECKLIST.md. Check ✅, mark N/A with one line, or explain in the PR body. -->
-<!-- 唯一事实来源：docs/ETHICS_CHECKLIST.md。满足打 ✅，不适用标 N/A 加一句理由，否则在正文解释。 -->
+<!-- Source of truth: docs/工程/伦理自查.md. Check ✅, mark N/A with one line, or explain in the PR body. -->
+<!-- 唯一事实来源：docs/工程/伦理自查.md。满足打 ✅，不适用标 N/A 加一句理由，否则在正文解释。 -->
 
 This PR touches: data handling 数据处理 / AI integration AI 集成 / user-facing copy 用户可见文案
 

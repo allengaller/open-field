@@ -3,7 +3,7 @@ import Database from 'better-sqlite3-multiple-ciphers';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { applyMigrations } from '../src/main/services/migrations';
+import { applyMigrations, MIGRATIONS } from '../src/main/services/migrations';
 
 const dir = mkdtempSync(join(tmpdir(), 'of-mig-'));
 const db = new Database(join(dir, 'plain.db'));
@@ -14,21 +14,47 @@ function tableNames(db: Database.Database): string[] {
 }
 
 describe('applyMigrations', () => {
-  it('v1 建出全部 11 张表并记录版本', () => {
+  it('全量迁移建出全部 12 张表并记录最高版本', () => {
     applyMigrations(db);
     const names = tableNames(db);
-    for (const t of ['field_events', 'encounters', 'artifacts', 'participants', 'participant_identity', 'consent_records', 'memos', 'inbox_items', 'time_sync_records', 'evidence_log', 'schema_migrations']) {
+    for (const t of ['field_events', 'encounters', 'artifacts', 'participants', 'participant_identity', 'consent_records', 'memos', 'inbox_items', 'time_sync_records', 'evidence_log', 'ref_sequences', 'schema_migrations']) {
       expect(names).toContain(t);
     }
     const version = db.prepare('SELECT MAX(version) AS v FROM schema_migrations').get() as { v: number };
-    expect(version.v).toBe(1);
+    expect(version.v).toBe(2);
   });
 
   it('重复执行幂等', () => {
     applyMigrations(db);
     expect(() => applyMigrations(db)).not.toThrow();
     const count = db.prepare('SELECT COUNT(*) AS n FROM schema_migrations').get() as { n: number };
-    expect(count.n).toBe(1);
+    expect(count.n).toBe(2);
+  });
+
+  it('v2 回填 ref_sequences：从既有标准 ref_id 解析每 date_city 最高序号，忽略非标准值', () => {
+    const dir2 = mkdtempSync(join(tmpdir(), 'of-mig-v2-'));
+    const db2 = new Database(join(dir2, 'plain.db'));
+    try {
+      // 手工构造「旧库」：只应用 v1 并标记已迁移（含 refId 数据），再走 applyMigrations 真实升级路径观察 v2 回填
+      db2.exec('CREATE TABLE schema_migrations (version INTEGER PRIMARY KEY, applied_at INTEGER NOT NULL)');
+      db2.exec(MIGRATIONS[0]!.sql);
+      db2.prepare('INSERT INTO schema_migrations (version, applied_at) VALUES (1, 1)').run();
+      const ins = "INSERT INTO artifacts (id, type, sha256, size, mime, captured_at, device_id, version, ref_id, original_path) VALUES (?, 'audio', ?, 1, 'audio/wav', 1, 'd', 1, ?, '/tmp/x')";
+      db2.prepare(ins).run('x1', 'a'.repeat(64), 'OF-20260909-KMG-001#T00:30');
+      db2.prepare(ins).run('x2', 'b'.repeat(64), 'OF-20260909-KMG-003#T02:00');
+      db2.prepare(ins).run('x3', 'c'.repeat(64), 'OF-20260910-DLU-007#T00:00');
+      db2.prepare(ins).run('x4', 'd'.repeat(64), 'legacy-nonstandard');
+      db2.prepare(ins).run('x5', 'e'.repeat(64), null);
+      applyMigrations(db2); // 真实升级路径：v1 已标记，仅补跑 v2
+      const rows = db2.prepare('SELECT date_city, last_seq FROM ref_sequences ORDER BY date_city').all();
+      expect(rows).toEqual([
+        { date_city: '20260909-KMG', last_seq: 3 },
+        { date_city: '20260910-DLU', last_seq: 7 },
+      ]);
+    } finally {
+      db2.close();
+      rmSync(dir2, { recursive: true, force: true });
+    }
   });
 
   it('artifacts.sha256 唯一、ref_id 唯一索引存在', () => {

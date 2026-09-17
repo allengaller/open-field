@@ -15,9 +15,9 @@ coverage/
 website/.env
 
 # Downloaded third-party reference files (personal-use only, see references/INDEX.md)
-docs/fieldwork/references/*.pdf
-docs/fieldwork/references/*.txt
-docs/fieldwork/references/*.html
+docs/田野方法/参考文献/*.pdf
+docs/田野方法/参考文献/*.txt
+docs/田野方法/参考文献/*.html
 
 # Root-level scratch downloads (same personal-use policy)
 /oro49592*

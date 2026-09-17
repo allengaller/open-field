@@ -31,8 +31,8 @@ Feature proposals that touch data handling, AI, or participant-facing flows must
 
 ## Pull Requests（合并请求）
 
-1. The PR template embeds the [Ethics Self-Review Checklist](docs/ETHICS_CHECKLIST.md) — complete it before requesting review.
-   PR 模板已内嵌[伦理自查清单](docs/ETHICS_CHECKLIST.md)，请先自查再请求评审。
+1. The PR template embeds the [Ethics Self-Review Checklist](docs/工程/伦理自查.md) — complete it before requesting review.
+   PR 模板已内嵌[伦理自查清单](docs/工程/伦理自查.md)，请先自查再请求评审。
 2. Any PR touching **data handling, AI integration, or user-facing copy** follows that checklist. Reviewers treat an unchecked applicable item as blocking; unsatisfiable §1–§3 items go to **Maintainer Ethics Review** — approval alone does not merge.
    涉及**数据处理、AI 集成或用户可见文案**的 PR 必须走该清单。适用项未勾选即阻断；第 1–3 节有无法满足的项时进入**维护者伦理评审**，仅 Approve 不合入。
 3. **Bilingual parity 双语对等** — no feature is done until both languages are done（第 4 节）.
@@ -68,11 +68,11 @@ pnpm dev            # launch the Electron app 启动桌面应用
 pnpm e2e            # build, then Playwright Electron smoke 构建 + Electron 冒烟
 ```
 
-Layout 代码结构：`packages/core` holds the pure-TS data model, hash chain, RefId, and bundle protocol (no UI dependencies); `apps/desktop` is the Electron app whose services live in `src/main/services/` as framework-free TS modules, tested directly in Node — the Electron shell is thin (`src/main/`). The [architecture doc](docs/ARCHITECTURE.md) is the as-built reference; update the matching section when you change service-layer behavior.
-布局：`packages/core` 是纯 TS 的数据模型、哈希链、引用 ID 与 bundle 协议（无 UI 依赖）；`apps/desktop` 的服务层位于 `src/main/services/`，为框架无关的 TS 模块、在 Node 环境直接测试——Electron 只做薄壳（`src/main/`）。[架构文档](docs/ARCHITECTURE.md)是已实现现状的权威参照；改动服务层行为时请同步更新对应章节。
+Layout 代码结构：`packages/core` holds the pure-TS data model, hash chain, RefId, and bundle protocol (no UI dependencies); `apps/desktop` is the Electron app whose services live in `src/main/services/` as framework-free TS modules, tested directly in Node — the Electron shell is thin (`src/main/`). The [architecture doc](docs/工程/架构.md) is the as-built reference; update the matching section when you change service-layer behavior.
+布局：`packages/core` 是纯 TS 的数据模型、哈希链、引用 ID 与 bundle 协议（无 UI 依赖）；`apps/desktop` 的服务层位于 `src/main/services/`，为框架无关的 TS 模块、在 Node 环境直接测试——Electron 只做薄壳（`src/main/`）。[架构文档](docs/工程/架构.md)是已实现现状的权威参照；改动服务层行为时请同步更新对应章节。
 
-Invariants to respect when contributing 不变式：the evidence log is append-only (enforced by DB triggers), originals are sealed read-only via temp+rename, `real_name` may only enter the `participant_identity` table, and destructive operations require an explicit confirmation token. See [PRINCIPLES.md](PRINCIPLES.md) and the [architecture spec](docs/superpowers/specs/2026-09-09-openfield-p1-architecture-design.md).
-贡献时须遵守的不变式：证据日志仅可追加（数据库触发器强制）、原始件经 temp+rename 封存为只读、真名只允许进入 `participant_identity` 表、破坏性操作必须显式确认令牌。详见 [PRINCIPLES.md](PRINCIPLES.md) 与[架构规格](docs/superpowers/specs/2026-09-09-openfield-p1-architecture-design.md)。
+Invariants to respect when contributing 不变式：the evidence log is append-only (enforced by DB triggers), originals are sealed read-only via temp+rename, `real_name` may only enter the `participant_identity` table, and destructive operations require an explicit confirmation token. See [PRINCIPLES.md](PRINCIPLES.md) and the [architecture spec](docs/规格与计划/规格/2026-09-09-P1架构设计.md).
+贡献时须遵守的不变式：证据日志仅可追加（数据库触发器强制）、原始件经 temp+rename 封存为只读、真名只允许进入 `participant_identity` 表、破坏性操作必须显式确认令牌。详见 [PRINCIPLES.md](PRINCIPLES.md) 与[架构规格](docs/规格与计划/规格/2026-09-09-P1架构设计.md)。
 
 ## Security & Conduct（安全与行为）
 

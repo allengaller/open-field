@@ -9,7 +9,7 @@
 
 [![CI](https://github.com/allengaller/open-field/actions/workflows/ci.yml/badge.svg)](https://github.com/allengaller/open-field/actions/workflows/ci.yml)
 
-**[宪法 Principles](PRINCIPLES.md)** · **[田野行动总纲 Campaign](docs/CAMPAIGN.md)** · **[方法论语料库](docs/fieldwork/README.md)** · **[伦理自查清单](docs/ETHICS_CHECKLIST.md)** · **[参与贡献](CONTRIBUTING.md)** · **[官网](https://jvvil0otgnr4.meoo.fun)**
+**[宪法 Principles](PRINCIPLES.md)** · **[田野行动总纲](docs/研究/行动总纲.md)** · **[方法论语料库](docs/田野方法/README.md)** · **[伦理自查清单](docs/工程/伦理自查.md)** · **[参与贡献](CONTRIBUTING.md)** · **[官网](https://jvvil0otgnr4.meoo.fun)**
 
 </div>
 
@@ -44,7 +44,7 @@ P1（能出门干活）开发中。**桌面端服务层与完整工作台界面�
 | `apps/mobile` — 手机轻薄端（encounter 记录 / 同意存证 / 速记 → bundle） | ⬜ Plan 3 |
 | AI 能力（编码提案、转写、反身性提醒） | ⬜ P2/P3，P1 刻意不接 AI |
 
-> **30 秒上手**：`pnpm install && cd apps/desktop && pnpm dev`，创建资料库后到「总览」点「载入演示数据」即可体验全部功能（详细操作见 [docs/USER_GUIDE.md](docs/USER_GUIDE.md)）。
+> **30 秒上手**：`pnpm install && cd apps/desktop && pnpm dev`，创建资料库后到「总览」点「载入演示数据」即可体验全部功能（详细操作见 [docs/工程/使用手册.md](docs/工程/使用手册.md)）。
 
 ## 五层架构
 
@@ -62,7 +62,7 @@ P1（能出门干活）开发中。**桌面端服务层与完整工作台界面�
 └─────────────────────────────────────────────────────────┘
 ```
 
-P1 的关键决策（详见[架构规格](docs/superpowers/specs/2026-09-09-openfield-p1-architecture-design.md)）：
+P1 的关键决策（详见[架构规格](docs/规格与计划/规格/2026-09-09-P1架构设计.md)）：
 
 - **导入模式，不重造录音机**：手机录音 / 拍照经 iCloud 自然回流，桌面端的价值是证据链登记与结构化；
 - **双端分工**：桌面全功能端 + 手机轻薄端，iCloud 只搬密文与已同意材料；
@@ -152,13 +152,11 @@ open-field/
 ├─ packages/core/          # @openfield/core：zod 数据模型、哈希链、RefId、bundle 协议（无 UI 依赖）
 ├─ apps/desktop/           # @openfield/desktop：Electron 主进程服务层 + 工作台 renderer（五视图）
 ├─ docs/                   # 全部文档入口见 docs/README.md
-│  ├─ ARCHITECTURE.md      # As-built 架构：模块地图、证据链协议、IPC 接口面、测试策略
-│  ├─ USER_GUIDE.md        # 桌面端使用手册
-│  ├─ THREAT_MODEL.md      # 威胁模型：资产、对手、缓解措施、残余风险
-│  ├─ CAMPAIGN.md          # 田野行动总纲：OpenField 服务的真实战场与需求源
-│  ├─ ETHICS_CHECKLIST.md  # PR 伦理自查清单（PRINCIPLES §7）
-│  ├─ fieldwork/           # 田野调查方法论语料库（12 章 + 术语表 + 参考文献）
-│  └─ superpowers/         # 架构规格与实现计划
+│  ├─ 工程/                # 架构 / 威胁模型 / 使用手册 / 伦理自查
+│  ├─ 研究/                # 行动总纲 / 田野落点 / 路书
+│  ├─ 田野方法/            # 田野调查方法论语料库（12 章 + 术语表 + 参考文献）
+│  ├─ 社会学田野/          # 社会学田野知识库（15 章 + 实践指南）
+│  └─ 规格与计划/          # 架构规格与实现计划（A 系列偏离记录）
 ├─ gtm/                    # Go-To-Market 计划（ICP / 定位 / 渠道 / 发布阶段 / 指标）
 ├─ website/                # 项目官网单页（已发布至 Meoo CDN）
 ├─ PRINCIPLES.md           # 项目宪法
@@ -181,15 +179,15 @@ open-field/
 | --- | --- |
 | [docs/README.md](docs/README.md) | **全部文档索引**（按阅读目的导航） |
 | [PRINCIPLES.md](PRINCIPLES.md) | 项目宪法：六条不可妥协项、工程标准、双语规范、质量基准 |
-| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | As-built 架构：模块地图、vault schema、证据链协议、导入流、IPC 接口面、测试策略 |
-| [docs/USER_GUIDE.md](docs/USER_GUIDE.md) | 桌面端使用手册：铁律、功能分步操作（含演示数据与 PIPL 危险区）、常见问题 |
-| [docs/THREAT_MODEL.md](docs/THREAT_MODEL.md) | 威胁模型：资产、对手、缓解措施对照、残余风险诚实清单 |
-| [docs/CAMPAIGN.md](docs/CAMPAIGN.md) | 田野行动总纲：商业模式、执行 SOP、与 OpenField 的需求映射 |
-| [docs/fieldwork/README.md](docs/fieldwork/README.md) | 田野调查方法论语料库：面向 IT 从业者的完整中文知识库（12 章） |
-| [docs/ETHICS_CHECKLIST.md](docs/ETHICS_CHECKLIST.md) | PR 伦理自查清单：数据处理 / AI / 文案类 PR 必须过检 |
+| [docs/工程/架构.md](docs/工程/架构.md) | As-built 架构：模块地图、vault schema、证据链协议、导入流、IPC 接口面、测试策略 |
+| [docs/工程/使用手册.md](docs/工程/使用手册.md) | 桌面端使用手册：铁律、功能分步操作（含演示数据与 PIPL 危险区）、常见问题 |
+| [docs/工程/威胁模型.md](docs/工程/威胁模型.md) | 威胁模型：资产、对手、缓解措施对照、残余风险诚实清单 |
+| [docs/研究/行动总纲.md](docs/研究/行动总纲.md) | 田野行动总纲：商业模式、执行 SOP、与 OpenField 的需求映射 |
+| [docs/田野方法/README.md](docs/田野方法/README.md) | 田野调查方法论语料库：面向 IT 从业者的完整中文知识库（12 章） |
+| [docs/工程/伦理自查.md](docs/工程/伦理自查.md) | PR 伦理自查清单：数据处理 / AI / 文案类 PR 必须过检 |
 | [gtm/README.md](gtm/README.md) | Go-To-Market 计划：ICP、定位与信息屋、渠道内容、四阶段发布、北极星指标、风险红线 |
-| [docs/superpowers/specs/](docs/superpowers/specs/) | P1 架构设计规格（已确认） |
-| [docs/superpowers/plans/](docs/superpowers/plans/) | 实现计划与评审偏离记录（A 系列决议） |
+| [docs/规格与计划/规格/](docs/规格与计划/规格/) | P1 架构设计规格（已确认） |
+| [docs/规格与计划/计划/](docs/规格与计划/计划/) | 实现计划与评审偏离记录（A 系列决议） |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | 贡献指南：红线、流程、质量关卡、本地开发 |
 | [SECURITY.md](SECURITY.md) | 安全策略：报告渠道与最高优先级问题 |
 | [CHANGELOG.md](CHANGELOG.md) | 变更日志 |
@@ -202,7 +200,7 @@ open-field/
 
 ## 贡献
 
-任何涉及**数据处理、AI 集成或用户可见文案**的 PR，必须通过[伦理自查清单](docs/ETHICS_CHECKLIST.md)并对照 [PRINCIPLES 第 2 节](PRINCIPLES.md)逐条检查。**绝不提交真实田野数据**——测试夹具只允许合成数据。详见 [CONTRIBUTING.md](CONTRIBUTING.md)。
+任何涉及**数据处理、AI 集成或用户可见文案**的 PR，必须通过[伦理自查清单](docs/工程/伦理自查.md)并对照 [PRINCIPLES 第 2 节](PRINCIPLES.md)逐条检查。**绝不提交真实田野数据**——测试夹具只允许合成数据。详见 [CONTRIBUTING.md](CONTRIBUTING.md)。
 
 ## 许可证与引用
 

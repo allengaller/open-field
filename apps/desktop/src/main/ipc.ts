@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { Encounter, FieldEvent, Participant, type InboxStatus } from '@openfield/core';
+import { Encounter, FieldEvent, Participant } from '@openfield/core';
 import { join } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import type { IpcChannel, IpcResult } from '../shared/ipc';
@@ -27,7 +27,7 @@ const ConfirmInput = z.object({
 });
 const PurgeInput = z.object({ pseudonym: z.string().min(1), confirmToken: z.string() });
 const BackupInput = z.object({ passphrase: z.string().min(8) });
-const ListInput = z.object({ status: z.string().optional() });
+const ListInput = z.object({ status: z.enum(['pending', 'ingested', 'quarantined', 'rejected']).optional() });
 const ItemInput = z.object({ itemId: z.string().min(1) });
 const CitationInput = z.object({ artifactId: z.string().min(1) });
 const EncountersQuery = z.object({ eventId: z.string().min(1) });
@@ -71,7 +71,7 @@ export function createIpcHandlers(
     'inbox:scan': () =>
       wrap(() => scanOnce(state.getDb(), { inboxDir: state.paths.inboxDir, quarantineDir: state.paths.quarantineDir })),
     'inbox:list': (p) =>
-      wrap(() => listInboxItems(state.getDb(), ListInput.parse(p).status as InboxStatus | undefined)),
+      wrap(() => listInboxItems(state.getDb(), ListInput.parse(p).status)),
     'inbox:confirm': (p) =>
       wrap(async () => {
         const input = ConfirmInput.parse(p);

@@ -52,3 +52,11 @@ OpenField 的所有显著变更记录于此。体例遵循 [Keep a Changelog](ht
   知情同意门禁：`makeCitation` 拒绝无未撤回 recording 同意的音频与无未撤回 portrait 同意的照片（no-consent）；采集与封存永不拦截——对研究者严谨、对受访者无感（PRINCIPLES §2.1/§2.3）。撤回已接入界面：`consents:withdraw` 以 `CONSENT_WITHDRAW` 入链，门禁即刻生效。
 - Real-name mapping path: `participants:set-real-name` writes into the encrypted `participant_identity` table only, deliberately **not** recorded on-chain (deterministic hashes of real names are dictionary-attackable; chain payloads carry pseudonyms and counts only). UI entry lives in the participant form.
   真名映射路径：`participants:set-real-name` 只写入加密库的 `participant_identity` 表，刻意**不入证据链**（真名的确定性哈希可被字典攻击；链载荷只允许化名与计数）。界面入口位于受访者建档表单。
+
+### Fixed
+- RefId sequence allocation is now monotonic and never reused: a new `ref_sequences` table (migration v2, backfilled from existing `ref_id` values) issues citation numbers, and PIPL purge no longer causes either a permanent `UNIQUE constraint` block (previously: re-issuing after purging a lower-published number retried forever) or reuse of an already-published number (previously: purging the highest number rolled the counter back). Regression tests cover both scenarios.
+  RefId 序号改为单调分配、永不复用：新增 `ref_sequences` 表（迁移 v2，从既有 ref_id 回填）签发引用序号；PIPL 清除后不再出现永久性唯一索引冲突（此前清除低序号后重新签发会“重试”致死）或复用已发表引用号（此前清除最高序号后计数回退）。两个场景均有回归测试。
+- `inbox:list` IPC input now validates `status` against the `InboxStatus` enum (previously any string passed through to the SQL query).
+  `inbox:list` 的 `status` 入参改为 InboxStatus 枚举校验（此前任意字符串均可透传到 SQL 查询）。
+- Bundle mediaRef de-duplication now updates the seen-set inside the loop, so duplicate filenames within one bundle produce a single inbox item (matching the documented intent).
+  bundle 媒体引用去重改为循环内同步更新集合：同一 bundle 内重复 filename 现在只落一条收件项（与注释声明的行为一致）。

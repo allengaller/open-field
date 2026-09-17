@@ -129,9 +129,9 @@ Export to REFI-QDA (NVivo/MAXQDA interoperability), standard citation formats wi
 
 ## 7. For Contributors（致贡献者）
 
-Every PR touching data handling, AI integration, or user-facing copy must pass the [Ethics Self-Review Checklist](docs/ETHICS_CHECKLIST.md) and be checked against Section 2. When in doubt, open an issue citing the principle at stake — debating principles is welcome; silently violating them is not.
+Every PR touching data handling, AI integration, or user-facing copy must pass the [Ethics Self-Review Checklist](docs/工程/伦理自查.md) and be checked against Section 2. When in doubt, open an issue citing the principle at stake — debating principles is welcome; silently violating them is not.
 
-任何涉及数据处理、AI 集成或用户可见文案的 PR，必须通过[伦理自查清单](docs/ETHICS_CHECKLIST.md)，并对照第 2 节逐条检查。有疑问时，欢迎开 issue 引用相关原则讨论——我们欢迎对原则的辩论，但不接受对原则的无声违背。
+任何涉及数据处理、AI 集成或用户可见文案的 PR，必须通过[伦理自查清单](docs/工程/伦理自查.md)，并对照第 2 节逐条检查。有疑问时，欢迎开 issue 引用相关原则讨论——我们欢迎对原则的辩论，但不接受对原则的无声违背。
 
 ---
 

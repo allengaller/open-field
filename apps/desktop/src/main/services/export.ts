@@ -49,14 +49,22 @@ export function makeCitation(
   const event = getFieldEvent(db, encounter.eventId);
   if (!event) throw new ExportError('no-event', `event 不存在：${encounter.eventId}`);
 
-  const prefix = `OF-${event.date.replaceAll('-', '')}-${event.cityCode}-`;
-  const counted = db.prepare('SELECT COUNT(*) AS n FROM artifacts WHERE ref_id LIKE ?').get(`${prefix}%`) as { n: number };
-  const seq = counted.n + 1;
   const rawOffset = Math.floor((artifact.capturedAt - encounter.startedAt) / 1000);
   const offsetSeconds = Math.min(Math.max(rawOffset, 0), 5999);
-  const refId = makeRefId({ date: event.date, cityCode: event.cityCode, seq, offsetSeconds });
+  const seqKey = `${event.date.replaceAll('-', '')}-${event.cityCode}`;
 
+  // 序号从 ref_sequences 单调递增分配，一经使用永不复用（purge 只删业务行，不回收此表）。
+  // 不可按现存 artifacts 计数续号：purge 删行会让计数回退，轻则与既有 refId 唯一索引
+  // 冲突（重试必然失败的永久阻断），重则复用已发表引用号（引用张冠李戴）。
   const tx = db.transaction(() => {
+    const row = db.prepare('SELECT last_seq FROM ref_sequences WHERE date_city = ?').get(seqKey) as { last_seq: number } | undefined;
+    const seq = (row?.last_seq ?? 0) + 1;
+    if (seq > 999) throw new ExportError('io', `该事件（${event.date} ${event.cityCode}）引用序号已达上限 999`);
+    const refId = makeRefId({ date: event.date, cityCode: event.cityCode, seq, offsetSeconds });
+    db.prepare(
+      `INSERT INTO ref_sequences (date_city, last_seq) VALUES (?, ?)
+       ON CONFLICT(date_city) DO UPDATE SET last_seq = excluded.last_seq`,
+    ).run(seqKey, seq);
     setArtifactRefId(db, artifact.id, refId);
     appendEntry(db, {
       ts: input.ts ?? Date.now(),
@@ -64,15 +72,9 @@ export function makeCitation(
       action: 'EXPORT',
       payloadHash: computePayloadHash({ artifactId: artifact.id, refId }),
     });
+    return refId;
   });
-  try {
-    tx();
-  } catch (err) {
-    if (err instanceof Error && /UNIQUE constraint/.test(err.message)) {
-      throw new ExportError('io', `引用 ID 冲突，请重试：${refId}`);
-    }
-    throw err;
-  }
+  const refId = tx();
   return { refId, artifact: { ...artifact, refId } };
 }
 

@@ -123,4 +123,22 @@ describe('applyBundle', () => {
     applyBundle(db, bundle);
     expect(count()).toBe(1);
   });
+
+  it('同一 bundle 内重复 filename 只落一条 pending（循环内同步去重）', () => {
+    const mediaRef = { filename: 'dup.m4a', sha256: 'c'.repeat(64), bytes: 100, mime: 'audio/mp4', type: 'audio' as const, capturedAt: 1757376700000 };
+    const bundle: Bundle = decodeBundle(encodeBundle({
+      schemaVersion: 1,
+      id: 'bundle-4',
+      deviceId: 'iphone-01',
+      createdAt: 1757376700000,
+      events: [],
+      encounters: [],
+      participants: [],
+      consents: [],
+      memos: [],
+      mediaRefs: [mediaRef, { ...mediaRef }],
+    }));
+    applyBundle(db, bundle);
+    expect(listInboxItems(db, 'pending').filter((i) => i.sourcePath === 'bundle:bundle-4:dup.m4a').length).toBe(1);
+  });
 });

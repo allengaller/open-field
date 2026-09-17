@@ -37,6 +37,7 @@ export function applyBundle(db: Database.Database, bundle: Bundle): void {
     for (const m of bundle.mediaRefs) {
       const sourcePath = `bundle:${bundle.id}:${m.filename}`;
       if (seenSourcePaths.has(sourcePath)) continue;
+      seenSourcePaths.add(sourcePath); // 同步更新：同一 bundle 内重复 filename 也只落一条
       insertInboxItem(db, {
         id: `inbox-${randomUUID()}`,
         sourcePath,

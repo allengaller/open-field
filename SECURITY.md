@@ -5,8 +5,8 @@
 OpenField holds evidentiary fieldwork data: recordings, transcripts, consent records, and real identities behind pseudonyms. A flaw here is not a bug report — it is a betrayal of the people in the vault.
 OpenField 存放的是证据级田野数据：录音、转写、同意书，以及化名背后的真实身份。此处的缺陷不是普通 bug——是对资料库中每一个人的辜负。
 
-> As-built mitigations, the adversary model, and an honest list of residual risks live in the [Threat Model](docs/THREAT_MODEL.md); implementation details in the [Architecture](docs/ARCHITECTURE.md).
-> 已实现的缓解措施、对手模型与残余风险的诚实清单见[威胁模型](docs/THREAT_MODEL.md)；技术实现细节见[架构文档](docs/ARCHITECTURE.md)。
+> As-built mitigations, the adversary model, and an honest list of residual risks live in the [Threat Model](docs/工程/威胁模型.md); implementation details in the [Architecture](docs/工程/架构.md).
+> 已实现的缓解措施、对手模型与残余风险的诚实清单见[威胁模型](docs/工程/威胁模型.md)；技术实现细节见[架构文档](docs/工程/架构.md)。
 
 ## Reporting（报告渠道）
 

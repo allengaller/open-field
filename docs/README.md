@@ -8,33 +8,40 @@
 | 你是谁 / 想做什么 | 读这些 |
 | --- | --- |
 | 5 分钟了解项目 | [README](../README.md) → [PRINCIPLES](../PRINCIPLES.md) |
-| 参与贡献 | [CONTRIBUTING](../CONTRIBUTING.md) → [ETHICS_CHECKLIST](ETHICS_CHECKLIST.md) → [ARCHITECTURE](ARCHITECTURE.md) |
-| 使用桌面端 | [USER_GUIDE](USER_GUIDE.md) → 遇到问题查 [ARCHITECTURE](ARCHITECTURE.md) 对应章节 |
-| 评审安全 / 报告漏洞 | [SECURITY](../SECURITY.md) → [THREAT_MODEL](THREAT_MODEL.md) |
-| 出发做田野之前 | [CAMPAIGN](CAMPAIGN.md) 风控部分 → [fieldwork/07 伦理](fieldwork/07-ethics.md) → [11 模板](fieldwork/11-templates.md) |
-| 理解设计为什么这样定 | [架构规格](superpowers/specs/2026-09-09-openfield-p1-architecture-design.md) → [ARCHITECTURE](ARCHITECTURE.md) → 计划文档的 A 系列偏离记录 |
+| 参与贡献 | [CONTRIBUTING](../CONTRIBUTING.md) → [伦理自查](工程/伦理自查.md) → [架构](工程/架构.md) |
+| 使用桌面端 | [使用手册](工程/使用手册.md) → 遇到问题查 [架构](工程/架构.md) 对应章节 |
+| 评审安全 / 报告漏洞 | [SECURITY](../SECURITY.md) → [威胁模型](工程/威胁模型.md) |
+| 出发做田野之前 | [行动总纲](研究/行动总纲.md) 风控部分 → [07 伦理](田野方法/07-伦理.md) → [11 模板](田野方法/11-模板.md) |
+| 规划田野落点与行程 | [田野落点](研究/田野落点.md) → [路书](研究/路书.md) |
+| 理解设计为什么这样定 | [架构规格](规格与计划/规格/2026-09-09-P1架构设计.md) → [架构](工程/架构.md) → 计划文档的 A 系列偏离记录 |
 
-## 产品与行动
+## 工程（工程/）
 
 | 文档 | 内容 |
 | --- | --- |
-| [CAMPAIGN.md](CAMPAIGN.md) | 田野行动总纲：OpenField 服务的真实战场、商业模式、执行 SOP 与风控。需求源。 |
+| [架构.md](工程/架构.md) | As-built 架构：模块地图、vault schema、证据链协议、导入流、RefId/OFBK1 格式、IPC 接口面、测试策略。 |
+| [威胁模型.md](工程/威胁模型.md) | 威胁模型：资产、对手、攻击面与缓解措施对照、残余风险的诚实清单。 |
+| [使用手册.md](工程/使用手册.md) | 桌面端使用手册（V1.2）：三条铁律、功能分步操作（含演示数据与 PIPL 危险区）、常见问题、使用纪律。 |
+| [伦理自查.md](工程/伦理自查.md) | PR 伦理自查清单：数据处理 / AI / 文案类 PR 的必过关卡（PRINCIPLES §7 引用）。 |
+| [规格与计划/规格/](规格与计划/规格/) | 已确认的 P1 架构设计规格。 |
+| [规格与计划/计划/](规格与计划/计划/) | 逐任务实现计划与评审偏离记录（A 系列）。 |
+
+## 田野与研究（研究/）
+
+| 文档 | 内容 |
+| --- | --- |
+| [行动总纲.md](研究/行动总纲.md) | 田野行动总纲：OpenField 服务的真实战场、商业模式、执行 SOP 与风控。需求源。 |
+| [田野落点.md](研究/田野落点.md) | 田野落点决策：方言无障碍优先 + 5–6 线候选清单 + pilot 落点记录。 |
+| [路书.md](研究/路书.md) | Pilot 路书：出发前清单、每日行程与 OpenField 工作流、风险预案、预算、返程收尾。 |
 | [gtm/README.md](../gtm/README.md) | Go-To-Market 计划：主论题、ICP 分层、定位与信息屋、商业模式、渠道内容、四阶段发布闸门、北极星指标、风险红线。 |
-| [USER_GUIDE.md](USER_GUIDE.md) | 桌面端使用手册（V1.2）：三条铁律、功能分步操作（含演示数据与 PIPL 危险区）、常见问题、使用纪律。 |
 
-## 工程
+## 方法论语料库（田野方法/）
 
-| 文档 | 内容 |
-| --- | --- |
-| [ARCHITECTURE.md](ARCHITECTURE.md) | As-built 架构：模块地图、vault schema、证据链协议、导入流、RefId/OFBK1 格式、IPC 接口面、测试策略。 |
-| [THREAT_MODEL.md](THREAT_MODEL.md) | 威胁模型：资产、对手、攻击面与缓解措施对照、残余风险的诚实清单。 |
-| [ETHICS_CHECKLIST.md](ETHICS_CHECKLIST.md) | PR 伦理自查清单：数据处理 / AI / 文案类 PR 的必过关卡（PRINCIPLES §7 引用）。 |
-| [superpowers/specs/](superpowers/specs/) | 已确认的 P1 架构设计规格。 |
-| [superpowers/plans/](superpowers/plans/) | 逐任务实现计划与评审偏离记录（A 系列）。 |
+面向 IT 从业者的完整田野调查中文知识库，OpenField「方法论执行引擎」的知识底座。入口与学习路径见 [田野方法/README.md](田野方法/README.md)，12 章正文（01 定义 → 12 书单）+ [术语表](田野方法/术语表.md) + [参考文献索引](田野方法/参考文献/索引.md)。
 
-## 方法论语料库（fieldwork/）
+## 社会学田野知识库（社会学田野/）
 
-面向 IT 从业者的完整田野调查中文知识库，OpenField「方法论执行引擎」的知识底座。入口与学习路径见 [fieldwork/README.md](fieldwork/README.md)，12 章正文（01 定义 → 12 书单）+ [术语表](fieldwork/glossary.md) + [参考文献索引](fieldwork/references/INDEX.md)。
+15 章社会学田野工作知识库（01 基础 → 15 文献）+ [实践指南](社会学田野/实践指南.md)。入口见 [社会学田野/README.md](社会学田野/README.md)。
 
 ## 流程与合规（仓库根目录）
 

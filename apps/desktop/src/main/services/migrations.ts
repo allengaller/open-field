@@ -109,6 +109,23 @@ BEGIN
 END;
 `,
   },
+  {
+    version: 2,
+    // refId 序号分配表：单调递增、永不复用（purge 不回收此表）。
+    // 回填从现存 ref_id 解析（'OF-YYYYMMDD-CCC-NNN[#Tmm:ss]'）：升级库时保留历史最高序号，
+    // 避免升级后首次签发与既有 refId 冲突。GLOB 过滤保证只解析标准格式。
+    sql: `
+CREATE TABLE ref_sequences (
+  date_city TEXT PRIMARY KEY,
+  last_seq INTEGER NOT NULL
+);
+INSERT INTO ref_sequences (date_city, last_seq)
+SELECT substr(ref_id, 4, 8) || '-' || substr(ref_id, 13, 3), MAX(CAST(substr(ref_id, 17, 3) AS INTEGER))
+FROM artifacts
+WHERE ref_id GLOB 'OF-[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]-[A-Z][A-Z][A-Z]-[0-9][0-9][0-9]*'
+GROUP BY substr(ref_id, 4, 8), substr(ref_id, 13, 3);
+`,
+  },
 ];
 
 export function applyMigrations(db: Database.Database): void {
