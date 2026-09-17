@@ -39,8 +39,8 @@ P1（能出门干活）开发中。**桌面端服务层与完整工作台界面�
 | 模块 | 状态 |
 | --- | --- |
 | [`packages/core`](packages/core) — 数据模型 / 哈希链 / 引用 ID / bundle 协议 | ✅ 已交付，单测覆盖 |
-| [`apps/desktop`](apps/desktop) — Electron 服务层（加密库 / 导入 / 校验 / 引用 / 清除 / 备份） | ✅ 已交付，单测 + Playwright E2E |
-| 桌面 UI | ✅ 工作台五视图 + 访谈详情 + 演示数据 + PIPL 危险区 + 知情同意管理；备份还原界面推进中 |
+| [`apps/desktop`](apps/desktop) — Electron 服务层（加密库 / 导入 / 校验 / 引用 / 清除 / 备份 / 恢复） | ✅ 已交付，单测 + Playwright E2E |
+| 桌面 UI | ✅ 工作台五视图 + 访谈详情 + 演示数据 + PIPL 危险区 + 知情同意管理；备份恢复界面入口推进中（恢复服务与 IPC 已就绪） |
 | `apps/mobile` — 手机轻薄端（encounter 记录 / 同意存证 / 速记 → bundle） | ⬜ Plan 3 |
 | AI 能力（编码提案、转写、反身性提醒） | ⬜ P2/P3，P1 刻意不接 AI |
 
@@ -80,7 +80,7 @@ P1 的关键决策（详见[架构规格](docs/规格与计划/规格/2026-09-09
 | 引用 ID RefId | `OF-YYYYMMDD-CCC-NNN[#Tmm:ss]`，可精确引用到录音内某一秒；一经签发不可变更 |
 | PIPL 删除权 Purge | 按化名级联清除该受访者全部文件与记录；显式确认令牌防误清；清除事实本身入链留痕 |
 | 可信时间 TimeSync | NTP 校时，时钟偏移以 `TIME_SYNC` 入链——「采集时刻被改过」事后可检出 |
-| 加密备份 Export | OFBK1 容器（scrypt + AES-256-GCM）打包加密库副本与全部原始件 |
+| 加密备份与恢复 Backup | OFBK1 容器（scrypt + AES-256-GCM）打包加密库副本与全部原始件；`restoreBackup` 恢复到新目录自动重写路径、恢复只读封存，闭环测试验证「恢复出的库可重开」（界面入口待接） |
 | 每日田野日志 | 自动聚合当日事件 / 访谈 / 采集物为草稿 Memo，人工补写反思、确认后 `MEMO_CONFIRM` 入链 |
 | 链日志查看 | 证据链页逐条显示全部链条目（序号 / 时间 / 动作 / 操作者 / 哈希前缀）——「未被修改过」可随时自证 |
 | 受访者建档 + 知情同意 | 引荐链（滚雪球抽样证据）与同意范围、撤回状态界面录入，`CREATE_PARTICIPANT` / `CONSENT_RECORDED` 均入链 |
@@ -95,7 +95,8 @@ entry_hash = SHA-256(seq | prev_hash | ts | actor | action | payload_hash)
 
 seq          全链单调递增，首条 prev_hash 为 64 个 '0'
 action       INGEST_ARTIFACT · CREATE_EVENT · CREATE_ENCOUNTER · CREATE_PARTICIPANT
-             · CONSENT_RECORDED · CREATE_MEMO · MEMO_CONFIRM · EXPORT · TIME_SYNC
+             · CONSENT_RECORDED · CONSENT_WITHDRAW · CREATE_MEMO · MEMO_CONFIRM
+             · EXPORT · TIME_SYNC
              · PURGE_SUBJECT（只记录删除事实与范围，不含已删内容）
 ```
 
@@ -167,7 +168,7 @@ open-field/
 
 | 阶段 | 目标 | 内容 | 状态 |
 | --- | --- | --- | --- |
-| **P1**（0-3 月） | 能出门干活 | 桌面全功能端：加密库 + 证据链 + 导入流 + 引用 + PIPL 清除 + 加密备份；手机轻薄端出 bundle | 🚧 桌面服务层与完整工作台（含清除界面）完成；备份还原界面与手机端（Plan 3）推进中 |
+| **P1**（0-3 月） | 能出门干活 | 桌面全功能端：加密库 + 证据链 + 导入流 + 引用 + PIPL 清除 + 加密备份；手机轻薄端出 bundle | 🚧 桌面服务层与完整工作台（含清除界面）完成；备份恢复服务已就绪（界面入口待接），手机端（Plan 3）推进中 |
 | **P2**（3-6 月） | 能沉淀回溯 | 知识库四维索引、匿名化流水线、普通话转写接入、RFC3161 可信时间戳 | ⬜ |
 | **P3**（6 月+） | 能严谨分析 | AI 编码提案（只提案、人工确认）、三角验证视图（孤证标记）、REFI-QDA 导出、反身性提醒 | ⬜ |
 
