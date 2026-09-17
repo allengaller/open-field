@@ -1,9 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { existsSync } from 'node:fs';
+import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { Artifact } from '@openfield/core';
 import { cleanupTestVault, makeTestVault, TEST_PASSPHRASE } from './helpers';
 import { clearMockData, loadMockData, mockFootprint } from '../src/main/services/mock';
-import { listArtifacts, listEncountersByEvent, listFieldEvents, listMemos, listParticipants } from '../src/main/services/repos';
+import {
+  getArtifact, insertArtifact, listArtifacts, listEncountersByEvent, listFieldEvents, listMemos, listParticipants,
+} from '../src/main/services/repos';
 import { openVault, resolveVaultPaths } from '../src/main/services/vault';
 import type { Database } from 'better-sqlite3-multiple-ciphers';
 
@@ -64,5 +67,19 @@ describe('mock 演示数据', () => {
     const opened = openVault(resolveVaultPaths(home), TEST_PASSPHRASE, false);
     expect(opened.prepare('SELECT COUNT(*) AS n FROM evidence_log').get()).toBeTruthy();
     opened.close();
+  });
+
+  it('original_path 越界 → 拒绝清除，波及目录与登记行原样（与 purge 同一 A14 围栏标准）', async () => {
+    insertArtifact(
+      db,
+      Artifact.parse({ id: 'art-demo-note-001', type: 'note', sha256: 'c'.repeat(64), size: 8, mime: 'text/markdown', capturedAt: 1757376400000, deviceId: 'desktop' }),
+      join(home, 'evil', 'v1.md'),
+    );
+    mkdirSync(join(home, 'evil'), { recursive: true });
+    writeFileSync(join(home, 'evil', 'keep.txt'), 'keep');
+
+    await expect(clearMockData(db, paths)).rejects.toThrow(/越界/);
+    expect(existsSync(join(home, 'evil', 'keep.txt'))).toBe(true);
+    expect(getArtifact(db, 'art-demo-note-001')).toBeTruthy(); // 围栏先于删除：登记行未被误删
   });
 });

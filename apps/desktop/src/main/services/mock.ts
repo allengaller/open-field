@@ -3,7 +3,7 @@ import { computePayloadHash, Participant } from '@openfield/core';
 import { mkdir, rm, writeFile } from 'node:fs/promises';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { isAbsolute, join, relative } from 'node:path';
 import { appendEntry } from './evidence';
 import { guessArtifactType, ingestFile } from './ingest';
 import { scanOnce } from './inbox';
@@ -52,8 +52,14 @@ export async function clearMockData(db: Database.Database, paths: VaultPaths): P
   for (const id of artifactIds) {
     const row = db.prepare('SELECT original_path FROM artifacts WHERE id = ?').get(id) as { original_path: string } | undefined;
     if (row) {
+      const dir = join(row.original_path, '..'); // 封存目录 = 文件父目录
+      const rel = relative(paths.originalsRoot, dir);
+      if (!rel || rel.startsWith('..') || isAbsolute(rel)) {
+        // 与 purgeSubject（A14）同一围栏标准：original_path 来自 DB，不得借路径穿越删到 originalsRoot 之外
+        throw new Error(`artifact 封存目录越界，拒绝删除：${id}`);
+      }
       db.prepare('DELETE FROM artifacts WHERE id = ?').run(id);
-      await rm(join(row.original_path, '..'), { recursive: true, force: true }); // 封存目录 = 文件父目录
+      await rm(dir, { recursive: true, force: true });
     }
   }
   for (const id of encounterIds) db.prepare('DELETE FROM encounters WHERE id = ?').run(id);
