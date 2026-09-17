@@ -17,17 +17,9 @@ import {
   type MockArtifact,
 } from './mock-data';
 import type { VaultPaths } from './vault';
+import type { MockFootprint, MockSummary } from '../../shared/types';
 
-export interface MockSummary {
-  events: number;
-  participants: number;
-  encounters: number;
-  artifacts: number;
-  consents: number;
-  memos: number;
-  inboxFiles: number;
-  citations: number;
-}
+export type { MockFootprint, MockSummary };
 
 function dayOffsetToTs(dayOffset: number, hour = 9): number {
   const d = new Date();
@@ -208,7 +200,7 @@ async function ingestMockArtifact(
 }
 
 /** 概览面板用：当前演示数据规模（0 = 未载入） */
-export function mockFootprint(db: Database.Database): { artifacts: number; events: number; encounters: number } {
+export function mockFootprint(db: Database.Database): MockFootprint {
   const count = (sql: string, ...ids: string[]): number => {
     let n = 0;
     for (const id of ids) {

@@ -2,15 +2,9 @@ import type Database from 'better-sqlite3-multiple-ciphers';
 import { existsSync, mkdirSync } from 'node:fs';
 import { hostname } from 'node:os';
 import { openVault, resolveVaultPaths } from './services/vault';
+import type { VaultStatus } from '../shared/types';
 
-export interface VaultStatus {
-  home: string;
-  hasVault: boolean;
-  unlocked: boolean;
-  events: number;
-  encounters: number;
-  pendingInbox: number;
-}
+export type { VaultStatus };
 
 export class AppState {
   readonly paths: ReturnType<typeof resolveVaultPaths>;

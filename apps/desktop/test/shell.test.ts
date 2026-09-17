@@ -3,7 +3,8 @@ import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { cleanupTestVault } from './helpers';
-import { listInboxItems } from '../src/main/services/repos';
+import { Artifact } from '@openfield/core';
+import { insertArtifact, insertMemo, listInboxItems } from '../src/main/services/repos';
 import { exportBackup } from '../src/main/services/export';
 import { VaultError } from '../src/main/services/vault';
 import { AppState } from '../src/main/state';
@@ -107,6 +108,28 @@ describe('createIpcHandlers 端到端（main 进程同款调用序列）', () =>
     fresh.openVault('passphrase-1234');
     expect(fresh.status().events).toBe(1); // 备份里的登记随恢复回来
     fresh.close();
+  });
+
+  it('archive:detail 只返回该访谈关联的备忘录（原为全馆列表）', async () => {
+    const state = new AppState(join(home, 's8'));
+    const h = createIpcHandlers(state);
+    state.createVault('passphrase-1234');
+    expect(await h['events:create']({ id: 'evt-d', date: '2026-09-17', cityCode: 'HZS', locationName: '曹县' })).toMatchObject({ ok: true });
+    expect(await h['encounters:create']({ id: 'enc-d1', eventId: 'evt-d', participantRef: 'P01', samplingReason: '关键知情人', startedAt: Date.now() })).toMatchObject({ ok: true });
+    expect(await h['encounters:create']({ id: 'enc-d2', eventId: 'evt-d', participantRef: 'P02', samplingReason: '对照', startedAt: Date.now() })).toMatchObject({ ok: true });
+
+    const db = state.getDb();
+    const mkArt = (id: string, encounterId: string, sha: string): void =>
+      insertArtifact(db, Artifact.parse({ id, encounterId, type: 'note', sha256: sha, size: 4, mime: 'text/plain', capturedAt: 1757376400000, deviceId: 'desktop' }), '/nowhere');
+    mkArt('art-d1', 'enc-d1', 'd'.repeat(64));
+    mkArt('art-d2', 'enc-d2', 'e'.repeat(64));
+    insertMemo(db, { id: 'memo-d1', linkedArtifactIds: ['art-d1'], type: 'analytical', content: '价格波动', createdAt: 1757376500000, confirmedAt: null });
+    insertMemo(db, { id: 'memo-d2', linkedArtifactIds: ['art-d2'], type: 'quicknote', content: '批发商口径', createdAt: 1757376500000, confirmedAt: null });
+    insertMemo(db, { id: 'journal-d', linkedArtifactIds: [], type: 'daily', content: '当日田野日志', createdAt: 1757376500000, confirmedAt: null });
+
+    const detail = (await h['archive:detail']({ encounterId: 'enc-d1' })) as { ok: true; data: { memos: { id: string }[] } };
+    expect(detail.data.memos.map((m) => m.id)).toEqual(['memo-d1']);
+    state.close();
   });
 });
 

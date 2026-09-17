@@ -43,11 +43,13 @@ test('功能补全：演示数据 → 建档 → 同意 → 备忘录确认 → 
     await win.click('#btn-consent');
     await expect(win.locator('#status')).toContainText('同意已记录');
 
-    // 档案库：选事件 → 访谈 → 备忘录确认入档
+    // 档案库：选事件 → 访谈 → 备忘录确认入档（A25：备忘录按访谈关联展示）
     await win.click('#nav-archive');
-    await win.locator('#ar-events .selectlist__item').first().click();
-    await win.locator('#ar-encounters .selectlist__item').first().click();
+    await win.locator('#ar-events .selectlist__item', { hasText: 'evt-demo-kmg-mushuihua' }).click();
+    await win.locator('#ar-encounters .selectlist__item', { hasText: 'enc-demo-001' }).click();
     await expect(win.locator('#ar-detail')).toBeVisible();
+    await expect(win.locator('#ar-memos')).toContainText('暂无备忘录'); // 无关联备忘录的访谈不再展示全馆列表
+    await win.locator('#ar-encounters .selectlist__item', { hasText: 'enc-demo-002' }).click();
     await expect(win.locator('#ar-memos')).toContainText('草稿');
     await win.locator('#ar-memos button').first().click();
     await expect(win.locator('#status')).toContainText('备忘录已确认入档');

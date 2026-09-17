@@ -6,6 +6,7 @@ import { cleanupTestVault, makeTestVault } from './helpers';
 import { listEvidenceEntries } from '../src/main/services/evidence';
 import { insertFieldEvent, listInboxItems } from '../src/main/services/repos';
 import { applyBundle, scanOnce } from '../src/main/services/inbox';
+import { rejectInboxItem } from '../src/main/services/ingest';
 
 const { db, paths, home } = makeTestVault();
 afterAll(() => cleanupTestVault(home));
@@ -45,6 +46,18 @@ describe('scanOnce', () => {
     const n = listInboxItems(db, 'pending').length;
     await scanOnce(db, { inboxDir: paths.inboxDir, quarantineDir: paths.quarantineDir });
     expect(listInboxItems(db, 'pending').length).toBe(n);
+  });
+
+  it('rejected 的收件项重扫不复活（拒绝决定对该路径是终局）', async () => {
+    const wav = writeInbox('rejected-then-scan.wav', Buffer.from('R'.repeat(32)));
+    await scanOnce(db, { inboxDir: paths.inboxDir, quarantineDir: paths.quarantineDir });
+    const item = listInboxItems(db, 'pending').find((i) => i.sourcePath === wav);
+    expect(item).toBeTruthy();
+    rejectInboxItem(db, item!.id);
+
+    const summary = await scanOnce(db, { inboxDir: paths.inboxDir, quarantineDir: paths.quarantineDir });
+    expect(summary.pending).toBe(0);
+    expect(listInboxItems(db).filter((i) => i.sourcePath === wav).map((i) => i.status)).toEqual(['rejected']);
   });
 
   it('合法 bundle → 实体入库 + mediaRefs 变 pending + bundle 记 ingested', async () => {

@@ -6,6 +6,17 @@ import '@fontsource/jetbrains-mono/400.css';
 import '@fontsource/jetbrains-mono/500.css';
 import './style.css';
 import type { IpcResult } from '../../shared/ipc';
+import type {
+  Artifact as ArtifactRow,
+  ConsentRecord as ConsentRow,
+  Encounter as EncounterRow,
+  EvidenceEntry as EvidenceEntryRow,
+  FieldEvent as FieldEventRow,
+  InboxItem as PendingItem,
+  Memo as MemoRow,
+  Participant as ParticipantRow,
+} from '@openfield/core';
+import type { DetailPayload, MockFootprint, MockSummary, TimeSyncPayload, VaultStatus } from '../../shared/types';
 
 const $ = (id: string): HTMLElement => {
   const el = document.getElementById(id);
@@ -76,105 +87,8 @@ async function withLoading(btn: HTMLButtonElement, fn: () => Promise<void>): Pro
   }
 }
 
-interface VaultStatus {
-  home: string;
-  hasVault: boolean;
-  unlocked: boolean;
-  events: number;
-  encounters: number;
-  pendingInbox: number;
-}
-
-interface PendingItem {
-  id: string;
-  sourcePath: string;
-  status: string;
-  suggestedEventId?: string;
-  suggestedEncounterId?: string;
-}
-
-interface FieldEventRow {
-  id: string;
-  date: string;
-  cityCode: string;
-  locationName: string;
-}
-
-interface EncounterRow {
-  id: string;
-  eventId: string;
-  participantRef: string;
-  samplingReason: string;
-  startedAt: number;
-}
-
-interface ArtifactRow {
-  id: string;
-  type: string;
-  size: number;
-  mime: string;
-  capturedAt: number;
-  refId?: string;
-}
-
-interface MockSummary {
-  events: number;
-  participants: number;
-  encounters: number;
-  artifacts: number;
-  consents: number;
-  memos: number;
-  inboxFiles: number;
-  citations: number;
-}
-
-interface ParticipantRow {
-  pseudonym: string;
-  industry?: string;
-  region?: string;
-  referralChain?: string[];
-  consentScope?: string[];
-}
-
-interface ConsentRow {
-  id: string;
-  templateType: 'recording' | 'portrait' | 'publication';
-  scope: string;
-  withdrawnAt: number | null;
-}
-
-interface MemoRow {
-  id: string;
-  type: 'reflexive' | 'analytical' | 'daily' | 'quicknote';
-  content: string;
-  confirmedAt: number | null;
-}
-
-interface DetailPayload {
-  participant: ParticipantRow | null;
-  consents: ConsentRow[];
-  memos: MemoRow[];
-}
-
-interface EvidenceEntryRow {
-  seq: number;
-  ts: number;
-  actor: string;
-  action: string;
-  payloadHash: string;
-  prevHash: string;
-  entryHash: string;
-}
-
-interface TimeSyncPayload {
-  record: { checkedAt: number; ntpServer: string; offsetMs: number };
-}
-
-interface MockFootprint {
-  events: number;
-  encounters: number;
-  artifacts: number;
-}
+/* 实体与载荷类型统一取自 @openfield/core 与 shared/types（此前为手工复制，实体演进修必漂移）。
+   下方不再声明任何本地数据 interface。 */
 
 function input(id: string): HTMLInputElement {
   return $(id) as HTMLInputElement;

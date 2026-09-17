@@ -53,7 +53,9 @@ export function createEncounterWithEntry(
 }
 
 function localTimeline(db: Database.Database, date: string): string {
-  const events = listFieldEvents(db, date);
+  const allEvents = listFieldEvents(db);
+  const dateByEventId = new Map(allEvents.map((e) => [e.id, e.date])); // 一次建索引，避免逐采集物全表扫描（A25）
+  const events = allEvents.filter((e) => e.date === date);
   const lines: string[] = [`${date} 田野日志（草稿，待人工补写反思）`];
   for (const e of events) {
     lines.push(`- 事件 ${e.id}：${e.cityCode} ${e.locationName}`);
@@ -67,8 +69,7 @@ function localTimeline(db: Database.Database, date: string): string {
   }
   const total = listArtifacts(db).filter((a) => {
     if (a.encounterId) return false; // 已随访谈列出
-    const owner = a.eventId ? listFieldEvents(db).find((e) => e.id === a.eventId) : undefined;
-    return owner?.date === date;
+    return a.eventId !== undefined && dateByEventId.get(a.eventId) === date;
   }).length;
   lines.push(`- 未挂访谈的当日采集物：${total} 份`);
   return lines.join('\n');

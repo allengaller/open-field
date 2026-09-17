@@ -23,9 +23,17 @@ function createWindow(): BrowserWindow {
       nodeIntegration: false,
     },
   });
+  // 外链白名单：renderer 被攻破时不能被当任意 URL 开启器用（钓鱼跳板）。
+  // 只放行项目官网与 GitHub 仓库；其余一律丢弃（窗口本身仍一律 deny）。
+  const EXTERNAL_HOSTS = new Set(['jvvil0otgnr4.meoo.fun', 'github.com']);
   win.webContents.setWindowOpenHandler(({ url }) => {
-    if (url.startsWith('https://')) {
-      void shell.openExternal(url);
+    try {
+      const parsed = new URL(url);
+      if (parsed.protocol === 'https:' && EXTERNAL_HOSTS.has(parsed.hostname)) {
+        void shell.openExternal(url);
+      }
+    } catch {
+      // 非法 URL：直接忽略
     }
     return { action: 'deny' };
   });

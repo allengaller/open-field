@@ -251,6 +251,13 @@ export function listMemos(db: Database.Database): Memo[] {
   return (db.prepare('SELECT * FROM memos ORDER BY created_at').all() as Row[]).map(rowToMemo);
 }
 
+// 访谈详情页的备忘录：只取关联到该访谈采集物的，而非全馆列表（A25）
+export function listMemosByEncounter(db: Database.Database, encounterId: string): Memo[] {
+  const artifactIds = new Set(listArtifactsByEncounter(db, encounterId).map((a) => a.id));
+  if (artifactIds.size === 0) return [];
+  return listMemos(db).filter((m) => m.linkedArtifactIds.some((id) => artifactIds.has(id)));
+}
+
 export function confirmMemo(db: Database.Database, id: string, confirmedAt: number): Memo {
   db.prepare('UPDATE memos SET confirmed_at = ? WHERE id = ?').run(confirmedAt, id);
   const memo = getMemo(db, id);

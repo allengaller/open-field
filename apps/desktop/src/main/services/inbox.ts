@@ -8,18 +8,13 @@ import {
   getInboxItemBySourcePath, insertConsentRecordIfAbsent, insertEncounterIfAbsent, insertFieldEventIfAbsent,
   insertInboxItem, insertMemoIfAbsent, insertParticipantIfAbsent, listFieldEvents, listInboxItems,
 } from './repos';
+import type { ScanSummary } from '../../shared/types';
+
+export type { ScanSummary };
 
 export interface InboxDirs {
   inboxDir: string;
   quarantineDir: string;
-}
-
-export interface ScanSummary {
-  pending: number;
-  quarantined: number;
-  skippedIcloud: number;
-  skippedEmpty: number;
-  appliedBundles: number;
 }
 
 const ICLOUD_STUB = /^\..+\.icloud$/;
@@ -84,8 +79,13 @@ export async function scanOnce(db: Database.Database, dirs: InboxDirs): Promise<
       summary.skippedEmpty += 1; // macOS 14+ dataless 文件大小为 0：不当原始件
       continue;
     }
-    // 同路径已有 pending（待人工确认）或 ingested（重复投放）记录 → 跳过
-    if (getInboxItemBySourcePath(db, full, 'pending') || getInboxItemBySourcePath(db, full, 'ingested')) continue;
+    // 同路径已有 pending（待人工确认）、ingested（重复投放）或 rejected（用户已明确拒绝）记录 → 跳过；
+    // rejected 不复活：拒绝是对该路径的终局决定，否则每次扫描都会把它顶回待办（A25）
+    if (
+      getInboxItemBySourcePath(db, full, 'pending')
+      || getInboxItemBySourcePath(db, full, 'ingested')
+      || getInboxItemBySourcePath(db, full, 'rejected')
+    ) continue;
 
     if (name.endsWith('.ofbundle.json')) {
       try {

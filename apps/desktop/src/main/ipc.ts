@@ -17,7 +17,7 @@ import { runVerify } from './services/verify';
 import { purgeSubject } from './services/purge';
 import { exportBackup, makeCitation, restoreBackup } from './services/export';
 import { clearMockData, loadMockData, mockFootprint } from './services/mock';
-import { getParticipant, listConsentsByEncounter, listMemos } from './services/repos';
+import { getParticipant, listConsentsByEncounter, listMemosByEncounter } from './services/repos';
 
 const PassphraseInput = z.object({ passphrase: z.string() });
 const ConfirmInput = z.object({
@@ -133,7 +133,7 @@ export function createIpcHandlers(
         return {
           participant: enc ? getParticipant(db, enc.participant_ref) : null,
           consents: listConsentsByEncounter(db, encounterId),
-          memos: listMemos(db),
+          memos: listMemosByEncounter(db, encounterId),
         };
       }),
     'mock:load': () => wrap(() => loadMockData(state.getDb(), state.paths, state.deviceId)),
