@@ -1,8 +1,9 @@
 import { describe, it, expect, afterAll, beforeAll } from 'vitest';
-import { existsSync, mkdtempSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import AdmZip from 'adm-zip';
+import { createCipheriv, randomBytes, scryptSync } from 'node:crypto';
 import { ConsentRecord, Encounter, FieldEvent, verifyChain } from '@openfield/core';
 import { cleanupTestVault, makeTestVault, TEST_PASSPHRASE } from './helpers';
 import { ingestFile, sha256File } from '../src/main/services/ingest';
@@ -194,5 +195,47 @@ describe('restoreBackup', () => {
     } finally {
       rmSync(target, { recursive: true, force: true });
     }
+  });
+});
+
+describe('OFBK2 容器（A24：KDF 参数版本化 + 原子写）', () => {
+  const outPath = join(paths.backupsDir, 'v2.ofbackup');
+
+  it('新容器 magic 为 OFBK2，KDF 参数显式写入头部（N=2^17）且可解出', () => {
+    exportBackup(db, paths, TEST_PASSPHRASE, outPath);
+    const raw = readFileSync(outPath);
+    expect(raw.subarray(0, 5).toString('ascii')).toBe('OFBK2');
+    expect(raw.readUInt32LE(5)).toBe(2); // 容器格式版本
+    expect(raw.readUInt32LE(9)).toBe(2 ** 17); // scrypt N（旧 OFBK1 隐式默认 2^14）
+    const zip = new AdmZip(readBackup(outPath, TEST_PASSPHRASE));
+    expect(zip.getEntry('vault.db')).toBeTruthy();
+  });
+
+  it('错误口令 → GCM 拒绝（新容器同样过认证）', () => {
+    expect(() => readBackup(outPath, 'wrong-pass-888')).toThrow();
+  });
+
+  it('旧 OFBK1 容器（隐式 scrypt 默认参数）永久可读', () => {
+    // 手工构造 A22 之前的旧格式：'OFBK1' + salt(16) + iv(12) + tag(16) + 密文
+    const salt = randomBytes(16);
+    const iv = randomBytes(12);
+    const cipher = createCipheriv('aes-256-gcm', scryptSync('legacy-pass-123', salt, 32), iv);
+    const payload = Buffer.from('legacy-zip-bytes');
+    const ciphertext = Buffer.concat([cipher.update(payload), cipher.final()]);
+    const legacy = Buffer.concat([
+      Buffer.from('OFBK1', 'ascii'), salt, iv, cipher.getAuthTag(), ciphertext,
+    ]);
+    const legacyPath = join(paths.backupsDir, 'legacy.ofbackup');
+    writeFileSync(legacyPath, legacy);
+    expect(readBackup(legacyPath, 'legacy-pass-123').toString()).toBe('legacy-zip-bytes');
+    expect(() => readBackup(legacyPath, 'wrong-legacy-9')).toThrow();
+  });
+
+  it('容器原子写：崩溃残留的半截 .tmp 不占用最终路径也不阻塞重试', () => {
+    const retryPath = join(paths.backupsDir, 'atomic.ofbackup');
+    writeFileSync(`${retryPath}.tmp`, 'half-written-from-crash');
+    exportBackup(db, paths, TEST_PASSPHRASE, retryPath);
+    expect(existsSync(`${retryPath}.tmp`)).toBe(false);
+    expect(readBackup(retryPath, TEST_PASSPHRASE).subarray(0, 4)).toBeTruthy();
   });
 });

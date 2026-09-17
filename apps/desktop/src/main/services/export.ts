@@ -80,14 +80,28 @@ export function makeCitation(
   return { refId, artifact: { ...artifact, refId } };
 }
 
-// 自研 OFBK1 容器：'OFBK1' + salt(16) + iv(12) + GCM tag(16) + AES-256-GCM(zip(vault.db 副本 + originals/))
-const MAGIC = Buffer.from('OFBK1', 'ascii');
+// 自研备份容器：
+//  OFBK1（旧）: 'OFBK1' + salt(16) + iv(12) + GCM tag(16) + AES-256-GCM(zip(vault.db 副本 + originals/))
+//  OFBK2（A24）: 'OFBK2' + version(u32) + N(u32) + r(u32) + p(u32) + salt(16) + iv(12) + tag(16) + 同上密文
+// KDF 参数显式入头，未来再调参数无需再分叉格式；旧 OFBK1（隐式 scrypt 默认 N=2^14）永久可读。
+const MAGIC_V1 = Buffer.from('OFBK1', 'ascii');
+const MAGIC_V2 = Buffer.from('OFBK2', 'ascii');
+const KDF_V2 = { N: 2 ** 17, r: 8, p: 1 } as const; // OWASP 交互式口令建议档
+const SCRYPT_MAXMEM = 512 * 1024 * 1024; // N=2^17, r=8 需 ~134MB，超出 Node 默认 32MB 上限
+
+function writeU32(...values: number[]): Buffer {
+  const buf = Buffer.alloc(values.length * 4);
+  values.forEach((v, i) => buf.writeUInt32LE(v, i * 4));
+  return buf;
+}
 
 export function exportBackup(db: Database.Database, paths: VaultPaths, passphrase: string, outPath: string): void {
   if (existsSync(outPath)) throw new ExportError('io', `备份目标已存在：${outPath}`);
   const tmpDb = `${outPath}.tmp-vault.db`;
+  const tmpOut = `${outPath}.tmp`;
   try {
     rmSync(tmpDb, { force: true }); // A15：清掉上次崩溃残留的临时库，否则 backupVault 会因目标已存在而失败
+    rmSync(tmpOut, { force: true }); // A24：崩溃残留的半截容器不占用最终路径，也不阻塞重试
     backupVault(db, tmpDb);
     const zip = new AdmZip();
     zip.addFile('vault.db', readFileSync(tmpDb));
@@ -95,24 +109,44 @@ export function exportBackup(db: Database.Database, paths: VaultPaths, passphras
 
     const salt = randomBytes(16);
     const iv = randomBytes(12);
-    const key = scryptSync(passphrase, salt, 32);
+    const key = scryptSync(passphrase, salt, 32, { ...KDF_V2, maxmem: SCRYPT_MAXMEM });
     const cipher = createCipheriv('aes-256-gcm', key, iv);
+    const header = Buffer.concat([MAGIC_V2, writeU32(2, KDF_V2.N, KDF_V2.r, KDF_V2.p), salt, iv]);
     const ciphertext = Buffer.concat([cipher.update(zip.toBuffer()), cipher.final()]);
-    writeFileSync(outPath, Buffer.concat([MAGIC, salt, iv, cipher.getAuthTag(), ciphertext]));
+    // 原子写：最终路径上只可能出现完整容器（A22 的「存在即完成」语义因此不被半截文件破坏）
+    writeFileSync(tmpOut, Buffer.concat([header, cipher.getAuthTag(), ciphertext]));
+    renameSync(tmpOut, outPath);
   } finally {
     rmSync(tmpDb, { force: true });
+    rmSync(tmpOut, { force: true });
   }
 }
 
 export function readBackup(backupPath: string, passphrase: string): Buffer {
   const raw = readFileSync(backupPath);
-  if (!raw.subarray(0, 5).equals(MAGIC)) throw new ExportError('io', '不是 OpenField 备份文件');
-  const salt = raw.subarray(5, 21);
-  const iv = raw.subarray(21, 33);
-  const tag = raw.subarray(33, 49);
-  const decipher = createDecipheriv('aes-256-gcm', scryptSync(passphrase, salt, 32), iv);
-  decipher.setAuthTag(tag);
-  return Buffer.concat([decipher.update(raw.subarray(49)), decipher.final()]);
+  if (raw.subarray(0, 5).equals(MAGIC_V1)) {
+    const salt = raw.subarray(5, 21);
+    const iv = raw.subarray(21, 33);
+    const tag = raw.subarray(33, 49);
+    const decipher = createDecipheriv('aes-256-gcm', scryptSync(passphrase, salt, 32), iv);
+    decipher.setAuthTag(tag);
+    return Buffer.concat([decipher.update(raw.subarray(49)), decipher.final()]);
+  }
+  if (raw.subarray(0, 5).equals(MAGIC_V2)) {
+    const [version, N, r, p] = [raw.readUInt32LE(5), raw.readUInt32LE(9), raw.readUInt32LE(13), raw.readUInt32LE(17)];
+    if (version !== 2) throw new ExportError('io', `不支持的备份容器版本：${version}`);
+    // 头部参数来自文件，先夹在合理范围内，防止恶意文件借超大 N 触发内存耗尽
+    if (N < 2 ** 14 || N > 2 ** 21 || r < 8 || r > 64 || p < 1 || p > 8) {
+      throw new ExportError('io', `备份容器的 KDF 参数超出合理范围（N=${N}, r=${r}, p=${p}）`);
+    }
+    const salt = raw.subarray(21, 37);
+    const iv = raw.subarray(37, 49);
+    const tag = raw.subarray(49, 65);
+    const decipher = createDecipheriv('aes-256-gcm', scryptSync(passphrase, salt, 32, { N, r, p, maxmem: SCRYPT_MAXMEM }), iv);
+    decipher.setAuthTag(tag);
+    return Buffer.concat([decipher.update(raw.subarray(65)), decipher.final()]);
+  }
+  throw new ExportError('io', '不是 OpenField 备份文件');
 }
 
 // 恢复闭环：解密解包 → 包内库用「资料库口令」开启（校验口令）并把 original_path 重写到新家
