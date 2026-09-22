@@ -21,11 +21,11 @@ describe('validateRestoreForm', () => {
     expect(validateRestoreForm({ ...base, backupPassphrase: 'short' })).toContain('备份口令');
   });
 
-  it('新库口令过短', () => {
-    expect(validateRestoreForm({ ...base, vaultPassphrase: 'short' })).toContain('新库口令');
+  it('资料库口令过短', () => {
+    expect(validateRestoreForm({ ...base, vaultPassphrase: 'short' })).toContain('资料库口令');
   });
 
-  it('两次新库口令不一致', () => {
+  it('两次资料库口令不一致', () => {
     expect(validateRestoreForm({ ...base, vaultPassphrase2: 'different-pass' })).toContain('不一致');
   });
 });
@@ -47,8 +47,12 @@ describe('restoreErrorText', () => {
     expect(restoreErrorText('备份容器的 KDF 参数超出合理范围（N=1, r=8, p=1）')).toContain('损坏');
   });
 
-  it('GCM 认证失败归为口令不正确', () => {
+  it('GCM 认证失败归为备份口令不正确', () => {
     expect(restoreErrorText('Unsupported state or unable to authenticate data')).toContain('备份口令不正确');
+  });
+
+  it('SQLCipher 打开失败归为资料库口令不正确（A29：原口令确认语义）', () => {
+    expect(restoreErrorText('vault 口令错误或文件已损坏（无找回，见规格 §5）')).toContain('资料库口令不正确');
   });
 
   it('未知错误透传', () => {

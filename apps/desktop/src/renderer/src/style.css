@@ -7,6 +7,12 @@
   box-sizing: border-box;
 }
 
+/* hidden 属性必须压过组件类的 display 声明（.formgrid 的 grid / .btn 的 inline-flex），
+   否则 JS 切换 hidden 不会真正隐藏元素（A29 打包验证中发现的既有缺口） */
+[hidden] {
+  display: none !important;
+}
+
 html,
 body {
   overflow-x: clip;

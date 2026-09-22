@@ -225,7 +225,7 @@ button('btn-restore-run').addEventListener('click', () =>
       toast(text);
       return;
     }
-    setReadout('已从备份恢复：请用新库口令解锁', 'is-ok');
+    setReadout('已从备份恢复：请用资料库口令解锁', 'is-ok');
     $('restore-fields').hidden = true;
     button('btn-restore-run').hidden = true;
     await refreshStatus();
