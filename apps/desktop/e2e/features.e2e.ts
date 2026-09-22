@@ -44,11 +44,14 @@ test('功能补全：演示数据 → 建档 → 同意 → 备忘录确认 → 
     await expect(win.locator('#status')).toContainText('同意已记录');
 
     // 档案库：选事件 → 访谈 → 备忘录确认入档（A25：备忘录按访谈关联展示）
+    // A28：演示数据集调整后 enc-demo-001 归属篆新事件、enc-demo-002 归属木水花事件，
+    // 按数据集实际归属分两次选事件（e2e 不进 CI，此漂移自数据集调整起未被捕获）。
     await win.click('#nav-archive');
-    await win.locator('#ar-events .selectlist__item', { hasText: 'evt-demo-kmg-mushuihua' }).click();
+    await win.locator('#ar-events .selectlist__item', { hasText: 'evt-demo-kmg-zhuanxin' }).click();
     await win.locator('#ar-encounters .selectlist__item', { hasText: 'enc-demo-001' }).click();
     await expect(win.locator('#ar-detail')).toBeVisible();
     await expect(win.locator('#ar-memos')).toContainText('暂无备忘录'); // 无关联备忘录的访谈不再展示全馆列表
+    await win.locator('#ar-events .selectlist__item', { hasText: 'evt-demo-kmg-mushuihua' }).click();
     await win.locator('#ar-encounters .selectlist__item', { hasText: 'enc-demo-002' }).click();
     await expect(win.locator('#ar-memos')).toContainText('草稿');
     await win.locator('#ar-memos button').first().click();
