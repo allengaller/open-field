@@ -6,3 +6,10 @@ allowBuilds:
   esbuild: true
   electron: true
   better-sqlite3-multiple-ciphers: true
+  electron-winstaller: false
+
+overrides:
+  # A27：app-builder-lib@26.15.3 声明 @electron/get ^3.0.0 却使用仅 5.x 存在的
+  # ElectronDownloadCacheMode（3.0.0 无此导出，打包时 resolveCacheMode 崩溃）。
+  # electron@44 本就使用 5.1.0，统一钉到 5.1.0。
+  '@electron/get': 5.1.0

@@ -23,3 +23,5 @@ docs/田野方法/参考文献/*.html
 /oro49592*
 apps/desktop/out/
 apps/desktop/test-results/
+
+apps/desktop/release/

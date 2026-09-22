@@ -1,0 +1,18 @@
+appId: fun.meoo.openfield
+productName: OpenField
+directories:
+  output: release
+  buildResources: icon
+files:
+  - out/**
+mac:
+  identity: null
+  category: public.app-category.productivity
+  icon: icon/icon.png
+  target:
+    - target: dmg
+      arch:
+        - arm64
+    - target: zip
+      arch:
+        - arm64
