@@ -61,6 +61,32 @@
                   <button class="btn" id="btn-backup">导出备份</button>
                   <button class="btn" id="btn-timesync">时间同步</button>
                 </div>
+                <div class="formgrid" id="restore-fields" hidden>
+                  <div class="field">
+                    <label class="field__label" for="restore-file">备份文件</label>
+                    <input class="input" id="restore-file" readonly placeholder="未选择" />
+                    <p class="field__help">恢复会替换当前位置整个资料库</p>
+                  </div>
+                  <div class="field">
+                    <label class="field__label" for="restore-backup-pass">备份口令</label>
+                    <input class="input" id="restore-backup-pass" type="password" placeholder="导出备份时设置的口令" autocomplete="off" />
+                    <p class="field__help"></p>
+                  </div>
+                  <div class="field">
+                    <label class="field__label" for="restore-vault-pass">新库口令</label>
+                    <input class="input" id="restore-vault-pass" type="password" placeholder="≥ 8 字符" autocomplete="off" />
+                    <p class="field__help">恢复后的资料库改用此口令</p>
+                  </div>
+                  <div class="field">
+                    <label class="field__label" for="restore-vault-pass2">确认新库口令</label>
+                    <input class="input" id="restore-vault-pass2" type="password" placeholder="再次输入" autocomplete="off" />
+                    <p class="field__help">两次输入必须完全一致</p>
+                  </div>
+                </div>
+                <div class="rows__actions">
+                  <button class="btn" id="btn-restore">从备份恢复…</button>
+                  <button class="btn btn--primary" id="btn-restore-run" hidden>执行恢复</button>
+                </div>
               </section>
               <section class="panel">
                 <h3>演示数据</h3>

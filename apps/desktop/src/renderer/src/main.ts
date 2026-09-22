@@ -5,6 +5,7 @@ import '@fontsource/inter/500.css';
 import '@fontsource/jetbrains-mono/400.css';
 import '@fontsource/jetbrains-mono/500.css';
 import './style.css';
+import { restoreErrorText, validateRestoreForm } from './restore';
 import type { IpcResult } from '../../shared/ipc';
 import type {
   Artifact as ArtifactRow,
@@ -135,6 +136,11 @@ function applyStatus(s: VaultStatus): void {
   $('vault-chip-text').textContent = stateText;
   $('sb-state').textContent = stateText;
   $('sb-home').textContent = s.home;
+  button('btn-restore').hidden = s.unlocked;
+  if (s.unlocked) {
+    $('restore-fields').hidden = true;
+    button('btn-restore-run').hidden = true;
+  }
 }
 
 async function refreshStatus(): Promise<VaultStatus> {
@@ -175,6 +181,54 @@ button('btn-backup').addEventListener('click', () =>
       passphrase: input('pass').value,
     });
     setReadout(`备份已导出：${outPath}`, 'is-ok');
+  }),
+);
+
+/* ── 备份恢复 ── */
+
+let restorePath: string | null = null;
+
+button('btn-restore').addEventListener('click', () =>
+  withLoading(button('btn-restore'), async () => {
+    const { path } = await invoke<{ path: string | null }>('backup:pick');
+    restorePath = path;
+    $('restore-fields').hidden = path === null;
+    button('btn-restore-run').hidden = path === null;
+    input('restore-file').value = path ?? '';
+  }),
+);
+
+button('btn-restore-run').addEventListener('click', () =>
+  withLoading(button('btn-restore-run'), async () => {
+    const backupPassphrase = input('restore-backup-pass').value;
+    const vaultPassphrase = input('restore-vault-pass').value;
+    const problem = validateRestoreForm({
+      backupPath: restorePath ?? '',
+      backupPassphrase,
+      vaultPassphrase,
+      vaultPassphrase2: input('restore-vault-pass2').value,
+    });
+    if (problem) {
+      setReadout(`错误：${problem}`, 'is-error');
+      toast(problem);
+      return;
+    }
+    // 不走 invoke()：restoreErrorText 要在通用错误面之前替换文案
+    const res = (await window.openfield.invoke('backup:restore', {
+      backupPath: restorePath,
+      backupPassphrase,
+      vaultPassphrase,
+    })) as IpcResult<unknown>;
+    if (!res.ok) {
+      const text = restoreErrorText(res.error);
+      setReadout(`错误：${text}`, 'is-error');
+      toast(text);
+      return;
+    }
+    setReadout('已从备份恢复：请用新库口令解锁', 'is-ok');
+    $('restore-fields').hidden = true;
+    button('btn-restore-run').hidden = true;
+    await refreshStatus();
   }),
 );
 

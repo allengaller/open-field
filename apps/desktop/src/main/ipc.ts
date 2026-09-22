@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { app, dialog } from 'electron';
 import { Encounter, FieldEvent, Participant } from '@openfield/core';
 import { join } from 'node:path';
 import { randomUUID } from 'node:crypto';
@@ -106,6 +107,16 @@ export function createIpcHandlers(
         const outPath = join(state.paths.backupsDir, `backup-${stamp}.ofbackup`);
         exportBackup(state.getDb(), state.paths, passphrase, outPath);
         return { outPath };
+      }),
+    'backup:pick': () =>
+      wrap(async () => {
+        const picked = await dialog.showOpenDialog({
+          title: '选择 OpenField 备份文件',
+          defaultPath: app.getPath('downloads'),
+          filters: [{ name: 'OpenField 备份', extensions: ['ofbackup'] }],
+          properties: ['openFile'],
+        });
+        return { path: picked.canceled || picked.filePaths.length === 0 ? null : picked.filePaths[0] };
       }),
     'backup:restore': (p) =>
       wrap(() => {

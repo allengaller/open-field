@@ -14,6 +14,7 @@ export const IPC_CHANNELS = [
   'citation:make',
   'purge:subject',
   'backup:export',
+  'backup:pick',
   'backup:restore',
   'archive:events',
   'archive:encounters',
