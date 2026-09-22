@@ -40,7 +40,7 @@ P1（能出门干活）开发中。**桌面端服务层与完整工作台界面�
 | --- | --- |
 | [`packages/core`](packages/core) — 数据模型 / 哈希链 / 引用 ID / bundle 协议 | ✅ 已交付，单测覆盖 |
 | [`apps/desktop`](apps/desktop) — Electron 服务层（加密库 / 导入 / 校验 / 引用 / 清除 / 备份 / 恢复） | ✅ 已交付，单测 + Playwright E2E |
-| 桌面 UI | ✅ 工作台五视图 + 访谈详情 + 演示数据 + PIPL 危险区 + 知情同意管理；备份恢复界面入口推进中（恢复服务与 IPC 已就绪） |
+| 桌面 UI | ✅ 工作台五视图 + 访谈详情 + 演示数据 + PIPL 危险区 + 知情同意管理 + 备份恢复；macOS arm64 打包（`pnpm dist` 出无签名 DMG/zip，`pnpm test:packaged` 闸门） |
 | `apps/mobile` — 手机轻薄端（encounter 记录 / 同意存证 / 速记 → bundle） | ⬜ Plan 3 |
 | AI 能力（编码提案、转写、反身性提醒） | ⬜ P2/P3，P1 刻意不接 AI |
 
