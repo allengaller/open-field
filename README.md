@@ -39,8 +39,10 @@ P1（能出门干活）开发中。**桌面端服务层与完整工作台界面�
 | 模块 | 状态 |
 | --- | --- |
 | [`packages/core`](packages/core) — 数据模型 / 哈希链 / 引用 ID / bundle 协议 | ✅ 已交付，单测覆盖 |
+| [`packages/knowledge`](packages/knowledge) — 田野方法论内容管道（docs/ 两套知识库 → 构建期 HTML/manifest/搜索/场景卡） | ✅ 已交付，构建期安全断言 + 单测 |
 | [`apps/desktop`](apps/desktop) — Electron 服务层（加密库 / 导入 / 校验 / 引用 / 清除 / 备份 / 恢复） | ✅ 已交付，单测 + Playwright E2E |
-| 桌面 UI | ✅ 工作台五视图 + 访谈详情 + 演示数据 + PIPL 危险区 + 知情同意管理 + 备份恢复；macOS arm64 打包（`pnpm dist` 出无签名 DMG/zip，`pnpm test:packaged` 闸门） |
+| 桌面 UI | ✅ 工作台六视图（含「方法论」知识库视图 + 采集登记/知情同意/档案库场景卡）+ 演示数据 + PIPL 危险区 + 备份恢复；macOS arm64 打包（`pnpm dist` 出无签名 DMG/zip，`pnpm test:packaged` 闸门） |
+| [`apps/web`](apps/web) — 方法论知识库 Web App（React + HashRouter，离线静态托管，不含任何受访者数据功能） | ✅ 已交付，单测覆盖 |
 | `apps/mobile` — 手机轻薄端（encounter 记录 / 同意存证 / 速记 → bundle） | ⬜ Plan 3 |
 | AI 能力（编码提案、转写、反身性提醒） | ⬜ P2/P3，P1 刻意不接 AI |
 
@@ -151,7 +153,9 @@ pnpm e2e           # Playwright Electron 冒烟：建库 → 登记 → 导入 �
 ```
 open-field/
 ├─ packages/core/          # @openfield/core：zod 数据模型、哈希链、RefId、bundle 协议（无 UI 依赖）
-├─ apps/desktop/           # @openfield/desktop：Electron 主进程服务层 + 工作台 renderer（五视图）
+├─ packages/knowledge/     # @openfield/knowledge：田野方法论内容管道（docs 两套知识库 → 预生成 HTML / manifest / 场景卡，dist 入库）
+├─ apps/desktop/           # @openfield/desktop：Electron 主进程服务层 + 工作台 renderer（六视图）
+├─ apps/web/               # @openfield/web：方法论知识库 Web App（React + HashRouter，仅知识内容，无资料库功能）
 ├─ docs/                   # 全部文档入口见 docs/README.md
 │  ├─ 工程/                # 架构 / 威胁模型 / 使用手册 / 伦理自查
 │  ├─ 研究/                # 行动总纲 / 田野落点 / 路书

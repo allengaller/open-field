@@ -4,6 +4,7 @@
     "noEmit": true,
     "types": ["node"],
     "lib": ["ESNext", "DOM", "DOM.Iterable"],
+    "resolveJsonModule": true,
     "paths": {
       "better-sqlite3-multiple-ciphers": ["./node_modules/better-sqlite3-multiple-ciphers/index.d.ts"]
     }

@@ -21,6 +21,7 @@
           <button class="rail__link" id="nav-inbox" data-view="inbox" data-glyph="收" role="tab" aria-selected="false"><span>收件箱</span></button>
           <button class="rail__link" id="nav-verify" data-view="verify" data-glyph="证" role="tab" aria-selected="false"><span>证据链</span></button>
           <button class="rail__link" id="nav-archive" data-view="archive" data-glyph="档" role="tab" aria-selected="false"><span>档案库</span></button>
+          <button class="rail__link" id="nav-knowledge" data-view="knowledge" data-glyph="法" role="tab" aria-selected="false"><span>方法论</span></button>
         </div>
         <div class="rail__foot">
           <div class="vault-chip"><span class="vault-chip__dot" id="vault-dot"></span><span id="vault-chip-text">LOCKED</span></div>
@@ -189,6 +190,7 @@
                   </div>
                 </div>
                 <div class="rows__actions"><button class="btn btn--primary" id="btn-encounter">登记访谈</button></div>
+                <div class="knowledge__mount" id="card-interview"></div>
               </section>
               <section class="panel">
                 <h3>受访者建档</h3>
@@ -259,6 +261,7 @@
                   </div>
                 </div>
                 <div class="rows__actions"><button class="btn btn--primary" id="btn-consent">记录同意</button></div>
+                <div class="knowledge__mount" id="card-consent"></div>
               </section>
             </section>
 
@@ -354,6 +357,38 @@
                   <div class="detail__col detail__col--wide">
                     <span class="archive__label">备忘录</span>
                     <div class="detail__body" id="ar-memos"></div>
+                    <div class="knowledge__mount" id="card-memo"></div>
+                  </div>
+                </div>
+              </section>
+            </section>
+
+            <!-- 方法论 -->
+            <section class="view" id="view-knowledge" role="tabpanel" aria-label="方法论">
+              <header class="viewhead">
+                <h2>方法论</h2>
+                <p>两套田野调查知识库离线内置：按章节查阅、全文检索，证据分级徽章标注每段论断的可信度。锁定态也可使用。</p>
+              </header>
+              <section class="panel">
+                <div class="knowledge__legend" id="knowledge-legend"></div>
+                <div class="knowledge__paths" id="knowledge-paths"></div>
+                <div class="knowledge__cards" id="knowledge-cards"></div>
+                <div class="knowledge">
+                  <div class="knowledge__col">
+                    <label class="archive__label" for="knowledge-collection">合集</label>
+                    <select class="input" id="knowledge-collection"></select>
+                    <label class="archive__label" for="knowledge-search">搜索</label>
+                    <input class="input" id="knowledge-search" placeholder="标题 / 摘要 / 正文检索…" autocomplete="off" />
+                    <span class="archive__label">章节</span>
+                    <ul class="selectlist" id="knowledge-chapters"></ul>
+                  </div>
+                  <div class="knowledge__col knowledge__col--wide">
+                    <div id="knowledge-content"></div>
+                    <div class="knowledge__pager" id="knowledge-pager"></div>
+                  </div>
+                  <div class="knowledge__col">
+                    <span class="archive__label">本节大纲</span>
+                    <ul class="knowledge__outline" id="knowledge-outline"></ul>
                   </div>
                 </div>
               </section>

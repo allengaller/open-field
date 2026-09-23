@@ -6,6 +6,7 @@ import '@fontsource/jetbrains-mono/400.css';
 import '@fontsource/jetbrains-mono/500.css';
 import './style.css';
 import { restoreErrorText, validateRestoreForm } from './restore';
+import { bindKnowledgeDeps, initKnowledge, mountMethodCards } from './knowledge';
 import type { IpcResult } from '../../shared/ipc';
 import type {
   Artifact as ArtifactRow,
@@ -117,6 +118,7 @@ function showView(name: string): void {
   if (name === 'inbox') void refreshPending();
   if (name === 'verify') void loadEvidenceLog();
   if (name === 'overview') void refreshMockStatus();
+  if (name === 'knowledge') void initKnowledge();
 }
 
 for (const btn of navButtons) {
@@ -778,6 +780,8 @@ window.addEventListener('unhandledrejection', (e) => {
 });
 
 void refreshStatus().then(() => refreshPending());
+bindKnowledgeDeps({ showView });
+mountMethodCards();
 window.openfield.onInboxChanged(() => {
   void refreshPending();
   void refreshStatus();

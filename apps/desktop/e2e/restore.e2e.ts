@@ -38,7 +38,9 @@ test('P1 恢复闭环：建库→备份→换家恢复→原口令解锁→校�
     await a.win.click('#nav-overview');
     await a.win.click('#btn-backup');
     await expect(a.win.locator('#status')).toContainText('备份已导出');
-    const backupFile = join(homeA, 'backups', readdirSync(join(homeA, 'backups'))[0]);
+    const backupName = readdirSync(join(homeA, 'backups'))[0];
+    if (!backupName) throw new Error('备份导出后 backups 目录为空');
+    const backupFile = join(homeA, 'backups', backupName);
     await a.app.close();
 
     // 家 B：无库锁定态 → 恢复。原生对话框无法自动化：main 进程内打桩 showOpenDialog
