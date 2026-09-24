@@ -21,6 +21,7 @@
           <button class="rail__link" id="nav-inbox" data-view="inbox" data-glyph="收" role="tab" aria-selected="false"><span>收件箱</span></button>
           <button class="rail__link" id="nav-verify" data-view="verify" data-glyph="证" role="tab" aria-selected="false"><span>证据链</span></button>
           <button class="rail__link" id="nav-archive" data-view="archive" data-glyph="档" role="tab" aria-selected="false"><span>档案库</span></button>
+          <button class="rail__link" id="nav-research" data-view="research" data-glyph="研" role="tab" aria-selected="false"><span>研究台</span></button>
           <button class="rail__link" id="nav-knowledge" data-view="knowledge" data-glyph="法" role="tab" aria-selected="false"><span>方法论</span></button>
         </div>
         <div class="rail__foot">
@@ -360,6 +361,60 @@
                     <div class="knowledge__mount" id="card-memo"></div>
                   </div>
                 </div>
+              </section>
+            </section>
+
+            <!-- 研究台 -->
+            <section class="view" id="view-research" role="tabpanel" aria-label="研究台">
+              <header class="viewhead">
+                <h2>研究台</h2>
+                <p>在工作台的原始记录上做研究：撰写备忘录、主题编码、回看事件链时间轴。撰写与编码本身都入证据链留痕。</p>
+              </header>
+              <section class="panel">
+                <h3>备忘录工作台</h3>
+                <p class="panel__hint">田野日志由「档案库 → 生成当日田野日志」按日期聚合，这里写反思、分析与速记。</p>
+                <div class="formgrid">
+                  <div class="field">
+                    <label class="field__label" for="rs-memo-type">类型</label>
+                    <select class="input" id="rs-memo-type">
+                      <option value="quicknote">速记</option>
+                      <option value="reflexive">反身性</option>
+                      <option value="analytical">分析</option>
+                    </select>
+                    <p class="field__help"></p>
+                  </div>
+                  <div class="field">
+                    <label class="field__label" for="rs-memo-themes">主题标签</label>
+                    <input class="input" id="rs-memo-themes" placeholder="报价结构, 三角验证缺口" />
+                    <p class="field__help">逗号分隔，可在编码时随时修改</p>
+                  </div>
+                  <div class="field">
+                    <label class="field__label" for="rs-memo-artifacts">关联采集物 ID</label>
+                    <input class="input" id="rs-memo-artifacts" placeholder="art-…, art-…" />
+                    <p class="field__help">逗号分隔；关联后档案库对应访谈会显示此备忘录</p>
+                  </div>
+                </div>
+                <div class="field">
+                  <label class="field__label" for="rs-memo-content">内容</label>
+                  <textarea class="input input--area" id="rs-memo-content" placeholder="编码草稿、反身性提醒、待核对问题……"></textarea>
+                </div>
+                <div class="rows__actions">
+                  <button class="btn" id="btn-coding-template">报道档案深读模板</button>
+                  <button class="btn btn--primary" id="btn-memo-create">创建备忘录并入链</button>
+                </div>
+                <div class="knowledge__mount" id="card-coding"></div>
+              </section>
+              <section class="panel">
+                <h3>主题图谱</h3>
+                <p class="panel__hint">点击主题筛选下方备忘录。孤证主题（只出现一次）是三角验证缺口，优先补第二来源。</p>
+                <div class="tagrow" id="rs-theme-chips"></div>
+                <span class="archive__label">备忘录</span>
+                <ul class="rows" id="rs-memos"></ul>
+              </section>
+              <section class="panel">
+                <h3>事件链时间轴</h3>
+                <p class="panel__hint">事件 → 访谈 → 采集物 → 备忘录按时间合并还原田野现场；点击行跳转档案库详情。</p>
+                <ul class="rows" id="rs-timeline"></ul>
               </section>
             </section>
 

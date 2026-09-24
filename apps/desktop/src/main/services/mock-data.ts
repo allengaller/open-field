@@ -57,6 +57,7 @@ export interface MockMemo {
   type: 'reflexive' | 'analytical' | 'quicknote';
   content: string;
   linkedArtifactIds?: string[];
+  themes?: string[];
 }
 
 export interface MockInboxFile {
@@ -241,6 +242,7 @@ export const mockMemos: MockMemo[] = [
     type: 'reflexive',
     content:
       '反身性备忘：我在木水花市场会不自觉用「中间商赚差价」的框架提问。P-002 两次纠正了我对「价」的理解——他报的从来不是单一价格，而是一组关系。警惕：不要把折扣叙事强加给数据。',
+    themes: ['反身性', '提问框架'],
   },
   {
     id: 'memo-demo-analytical-001',
@@ -248,6 +250,7 @@ export const mockMemos: MockMemo[] = [
     content:
       '编码草稿（待确认）：「报价的三档结构」初步浮现于 P-002/P-004 两处，P-001 未提及。属于孤证的部分：夜市尾段交易规则仅有 P-002 单一来源，需在下一场田野找第二来源（三角验证缺口）。',
     linkedArtifactIds: ['art-demo-note-001', 'art-demo-note-002'],
+    themes: ['报价结构', '三角验证缺口'],
   },
 ];
 

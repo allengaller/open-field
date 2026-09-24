@@ -36,7 +36,7 @@ describe('构建产物', () => {
   });
 
   it('卡片章节与锚点全部可解析', () => {
-    expect(manifest.cards.length).toBe(8);
+    expect(manifest.cards.length).toBe(9);
     for (const card of manifest.cards) {
       const coll = manifest.collections.find((c) => c.id === card.source.collectionId);
       const chapter = coll?.chapters.find((ch) => ch.id === card.source.chapterId);

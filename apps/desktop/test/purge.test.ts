@@ -28,7 +28,7 @@ beforeAll(async () => {
   writeFileSync(src, 'P'.repeat(512));
   const { artifact } = await ingestFile(db, paths.originalsRoot, { sourcePath: src, mime: 'audio/wav', type: 'audio', deviceId: 'desktop', encounterId: 'enc-1' });
   artifactId = artifact.id;
-  insertMemo(db, { id: 'memo-1', linkedArtifactIds: [artifact.id], type: 'quicknote', content: '受访者提到价格波动', createdAt: 1757376300000, confirmedAt: null });
+  insertMemo(db, { id: 'memo-1', linkedArtifactIds: [artifact.id], type: 'quicknote', themes: [], content: '受访者提到价格波动', createdAt: 1757376300000, confirmedAt: null });
 });
 
 afterAll(() => {

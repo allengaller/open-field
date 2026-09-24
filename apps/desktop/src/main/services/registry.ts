@@ -1,9 +1,10 @@
 import type Database from 'better-sqlite3-multiple-ciphers';
+import { randomUUID } from 'node:crypto';
 import { computePayloadHash, Encounter, FieldEvent, type ConsentRecord, type EvidenceEntry, type Memo } from '@openfield/core';
 import { appendEntry } from './evidence';
 import {
-  confirmMemo, insertEncounter, insertFieldEvent, insertMemo, listArtifacts, listArtifactsByEncounter,
-  listEncountersByEvent, listFieldEvents, listMemos, getConsentRecord, withdrawConsent,
+  confirmMemo, getArtifact, insertEncounter, insertFieldEvent, insertMemo, listArtifacts, listArtifactsByEncounter,
+  listEncountersByEvent, listFieldEvents, listMemos, getConsentRecord, updateMemoThemes, withdrawConsent,
 } from './repos';
 
 export function createEventWithEntry(
@@ -83,6 +84,7 @@ export function buildDailyJournal(db: Database.Database, date: string, opts: { n
     id: `journal-${date}`,
     linkedArtifactIds: [],
     type: 'daily',
+    themes: [],
     content: localTimeline(db, date),
     createdAt: now,
     confirmedAt: null,
@@ -107,6 +109,73 @@ export function confirmMemoWithEntry(
     return { memo, entry };
   });
   return tx();
+}
+
+export interface MemoCreateInput {
+  type: Memo['type'];
+  content: string;
+  themes?: string[];
+  linkedArtifactIds?: string[];
+}
+
+// 研究台直接撰写备忘录：内容入库 + CREATE_MEMO 入链同事务。
+// daily 由 buildDailyJournal 专用（幂等、按日期聚合），此处排除。
+export function createMemoWithEntry(
+  db: Database.Database,
+  input: MemoCreateInput,
+  opts: { ts?: number } = {},
+): { memo: Memo; entry: EvidenceEntry } {
+  if (input.type === 'daily') throw new Error('田野日志由「田野日志」按钮按日期生成，不能手工创建');
+  const content = input.content.trim();
+  if (!content) throw new Error('备忘录内容不能为空');
+  const themes = normalizeThemes(input.themes ?? []);
+  const linkedArtifactIds = input.linkedArtifactIds ?? [];
+  const memo: Memo = {
+    id: `memo-${randomUUID()}`,
+    linkedArtifactIds,
+    type: input.type,
+    themes,
+    content,
+    createdAt: opts.ts ?? Date.now(),
+    confirmedAt: null,
+  };
+  const tx = db.transaction((): { memo: Memo; entry: EvidenceEntry } => {
+    for (const artifactId of linkedArtifactIds) {
+      if (!getArtifact(db, artifactId)) throw new Error(`采集物不存在：${artifactId}`);
+    }
+    insertMemo(db, memo);
+    const entry = appendEntry(db, { ts: memo.createdAt, actor: 'desktop', action: 'CREATE_MEMO', payloadHash: computePayloadHash(memo) });
+    return { memo, entry };
+  });
+  try {
+    return tx();
+  } catch (err) {
+    if (err instanceof Error && /UNIQUE constraint/.test(err.message)) {
+      throw new Error(`Memo 已存在：${memo.id}`);
+    }
+    throw err;
+  }
+}
+
+// 主题编码：编码结果本身就是研究动作，MEMO_CODE 入链留痕（研究台可回溯每一次编码）。
+export function codeMemoWithEntry(
+  db: Database.Database,
+  memoId: string,
+  themes: string[],
+  opts: { ts?: number } = {},
+): { memo: Memo; entry: EvidenceEntry } {
+  const ts = opts.ts ?? Date.now();
+  const normalized = normalizeThemes(themes);
+  const tx = db.transaction((): { memo: Memo; entry: EvidenceEntry } => {
+    const memo = updateMemoThemes(db, memoId, normalized);
+    const entry = appendEntry(db, { ts, actor: 'desktop', action: 'MEMO_CODE', payloadHash: computePayloadHash(memo) });
+    return { memo, entry };
+  });
+  return tx();
+}
+
+export function normalizeThemes(themes: string[]): string[] {
+  return [...new Set(themes.map((t) => t.trim()).filter((t) => t.length > 0))];
 }
 
 // 同意撤回：改动与链条目同事务；载荷为撤回后的完整同意记录（不含受访者身份字段）。

@@ -134,6 +134,7 @@ export async function loadMockData(db: Database.Database, paths: VaultPaths, dev
           id: m.id,
           linkedArtifactIds: m.linkedArtifactIds ?? [],
           type: m.type,
+          themes: m.themes ?? [],
           content: m.content,
           createdAt: dayOffsetToTs(1, 21),
           confirmedAt: null,

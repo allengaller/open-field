@@ -67,6 +67,7 @@ export const METHOD_CARD_IDS = [
   'observation-notes',
   'triangulation',
   'snowball',
+  'media-archive',
 ] as const;
 
 export function methodCardById(id: string): MethodCard | null {
@@ -208,12 +209,13 @@ function renderMethodCard(card: MethodCard): HTMLElement {
   return article;
 }
 
-/* 三处上下文场景卡片：采集登记（访谈 / 知情同意）+ 档案库备忘录栏 */
+/* 四处上下文场景卡片：采集登记（访谈 / 知情同意）+ 档案库备忘录栏 + 研究台编码 */
 export function mountMethodCards(): void {
   const mounts: Record<string, string> = {
     'card-interview': 'interview-guide',
     'card-consent': 'consent-ethics',
     'card-memo': 'memo-coding',
+    'card-coding': 'media-archive',
   };
   for (const [mountId, cardId] of Object.entries(mounts)) {
     const mount = el(mountId);

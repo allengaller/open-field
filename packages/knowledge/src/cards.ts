@@ -50,4 +50,9 @@ export const CARD_CONFIGS: CardConfig[] = [
     title: '抽样与引荐链',
     source: { collectionId: 'fieldwork', chapterPath: '03-进入田野.md', sectionNumber: '4' },
   },
+  {
+    id: 'media-archive',
+    title: '报道档案深读',
+    source: { collectionId: 'sociology', chapterPath: '05-中国/焦点访谈田野方法论.md', sectionNumber: '6' },
+  },
 ];

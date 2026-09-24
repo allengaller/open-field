@@ -48,7 +48,8 @@ test('P1 冒烟：建库 → 登记 → 扫描 → 确认 → 校验 → 引用'
 
     await win.click('#nav-inbox');
     await win.click('#btn-scan');
-    await expect(win.locator('#scan')).toContainText('"pending":1');
+    // 收件箱 watcher 可能抢在手动扫描前入库（此时 scan 统计为 pending:0），故以待确认列表为准
+    await expect(win.locator('#pending')).toContainText('interview.wav');
     await win.fill('#confirm-enc', 'enc-1');
     await win.click('#pending button');
     await expect(win.locator('#pending')).not.toContainText('interview.wav');

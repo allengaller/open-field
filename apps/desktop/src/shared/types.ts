@@ -3,6 +3,25 @@
 // 避免 renderer 手工复制实体 interface 后随实体演进漂移。
 import type { Participant, ConsentRecord, Memo } from '@openfield/core';
 
+export interface TimelineRow {
+  kind: 'event' | 'encounter' | 'artifact' | 'memo';
+  id: string;
+  at: number;
+  title: string;
+  detail: string;
+  themes?: string[];
+  confirmed?: boolean;
+  eventId?: string;
+  encounterId?: string;
+}
+
+export interface ResearchPayload {
+  timeline: TimelineRow[];
+  memos: Memo[];
+  themeCounts: { theme: string; count: number }[];
+  stats: { memos: number; drafts: number; confirmed: number; themes: number };
+}
+
 export interface VaultStatus {
   home: string;
   hasVault: boolean;

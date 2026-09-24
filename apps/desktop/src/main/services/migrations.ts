@@ -126,6 +126,11 @@ WHERE ref_id GLOB 'OF-[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]-[A-Z][A-Z][A-Z]-[
 GROUP BY substr(ref_id, 4, 8), substr(ref_id, 13, 3);
 `,
   },
+  {
+    version: 3,
+    // 主题编码（研究台）：备忘录的主题标签，JSON 数组存储，空数组为未编码。
+    sql: `ALTER TABLE memos ADD COLUMN themes TEXT NOT NULL DEFAULT '[]';`,
+  },
 ];
 
 export function applyMigrations(db: Database.Database): void {

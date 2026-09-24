@@ -83,6 +83,7 @@ function rowToMemo(r: Row): Memo {
     id: str(r.id),
     linkedArtifactIds: JSON.parse(str(r.linked_artifact_ids)) as string[],
     type: str(r.type) as 'reflexive' | 'analytical' | 'daily' | 'quicknote',
+    themes: JSON.parse(str(r.themes) || '[]') as string[],
     content: str(r.content),
     createdAt: num(r.created_at),
     confirmedAt: r.confirmed_at === null || r.confirmed_at === undefined ? null : num(r.confirmed_at),
@@ -238,8 +239,8 @@ export function withdrawConsent(db: Database.Database, id: string, at: number): 
 export function insertMemo(db: Database.Database, m: Memo): void {
   const v = Memo.parse(m);
   db.prepare(
-    'INSERT INTO memos (id, linked_artifact_ids, type, content, created_at, confirmed_at) VALUES (?, ?, ?, ?, ?, ?)',
-  ).run(v.id, JSON.stringify(v.linkedArtifactIds), v.type, v.content, v.createdAt, v.confirmedAt ?? null);
+    'INSERT INTO memos (id, linked_artifact_ids, type, themes, content, created_at, confirmed_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
+  ).run(v.id, JSON.stringify(v.linkedArtifactIds), v.type, JSON.stringify(v.themes ?? []), v.content, v.createdAt, v.confirmedAt ?? null);
 }
 
 export function getMemo(db: Database.Database, id: string): Memo | null {
@@ -260,6 +261,13 @@ export function listMemosByEncounter(db: Database.Database, encounterId: string)
 
 export function confirmMemo(db: Database.Database, id: string, confirmedAt: number): Memo {
   db.prepare('UPDATE memos SET confirmed_at = ? WHERE id = ?').run(confirmedAt, id);
+  const memo = getMemo(db, id);
+  if (!memo) throw new Error(`memo 不存在：${id}`);
+  return memo;
+}
+
+export function updateMemoThemes(db: Database.Database, id: string, themes: string[]): Memo {
+  db.prepare('UPDATE memos SET themes = ? WHERE id = ?').run(JSON.stringify(themes), id);
   const memo = getMemo(db, id);
   if (!memo) throw new Error(`memo 不存在：${id}`);
   return memo;

@@ -21,14 +21,14 @@ describe('applyMigrations', () => {
       expect(names).toContain(t);
     }
     const version = db.prepare('SELECT MAX(version) AS v FROM schema_migrations').get() as { v: number };
-    expect(version.v).toBe(2);
+    expect(version.v).toBe(3);
   });
 
   it('重复执行幂等', () => {
     applyMigrations(db);
     expect(() => applyMigrations(db)).not.toThrow();
     const count = db.prepare('SELECT COUNT(*) AS n FROM schema_migrations').get() as { n: number };
-    expect(count.n).toBe(2);
+    expect(count.n).toBe(3);
   });
 
   it('v2 回填 ref_sequences：从既有标准 ref_id 解析每 date_city 最高序号，忽略非标准值', () => {

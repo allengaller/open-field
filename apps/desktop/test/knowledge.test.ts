@@ -55,7 +55,7 @@ describe('知识库 manifest', () => {
 });
 
 describe('场景方法卡片', () => {
-  it('八张卡片齐备，每张指向真实章节的真实小节', () => {
+  it('九张卡片齐备，每张指向真实章节的真实小节', () => {
     expect([...METHOD_CARD_IDS]).toEqual([
       'interview-guide',
       'interview-toolbox',
@@ -65,6 +65,7 @@ describe('场景方法卡片', () => {
       'observation-notes',
       'triangulation',
       'snowball',
+      'media-archive',
     ]);
     for (const id of METHOD_CARD_IDS) {
       const card = methodCardById(id);

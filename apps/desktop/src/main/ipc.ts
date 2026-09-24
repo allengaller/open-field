@@ -5,7 +5,8 @@ import { join } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import type { IpcChannel, IpcResult } from '../shared/ipc';
 import type { AppState } from './state';
-import { createEventWithEntry, createEncounterWithEntry, confirmMemoWithEntry, buildDailyJournal, withdrawConsentWithEntry } from './services/registry';
+import { createEventWithEntry, createEncounterWithEntry, confirmMemoWithEntry, createMemoWithEntry, codeMemoWithEntry, buildDailyJournal, withdrawConsentWithEntry } from './services/registry';
+import { loadResearch } from './services/research';
 import { confirmInboxItem, rejectInboxItem } from './services/ingest';
 import { scanOnce } from './services/inbox';
 import {
@@ -48,6 +49,13 @@ const ConsentInput = z.object({
 });
 const ConsentIdInput = z.object({ consentId: z.string().min(1) });
 const RealNameInput = z.object({ pseudonym: z.string().min(1), realName: z.string().min(1) });
+const MemoCreateInput = z.object({
+  type: z.enum(['reflexive', 'analytical', 'quicknote']),
+  content: z.string().min(1),
+  themes: z.array(z.string().min(1)).optional(),
+  linkedArtifactIds: z.array(z.string().min(1)).optional(),
+});
+const MemoCodeInput = z.object({ memoId: z.string().min(1), themes: z.array(z.string().min(1)) });
 
 export function createIpcHandlers(
   state: AppState,
@@ -153,6 +161,13 @@ export function createIpcHandlers(
     'evidence:list': () => wrap(() => listEvidenceEntries(state.getDb())),
     'memos:confirm': (p) =>
       wrap(() => confirmMemoWithEntry(state.getDb(), MemoIdInput.parse(p).memoId)),
+    'research:load': () => wrap(() => loadResearch(state.getDb())),
+    'research:memo-create': (p) =>
+      wrap(() => createMemoWithEntry(state.getDb(), MemoCreateInput.parse(p))),
+    'research:memo-code': (p) => {
+      const input = MemoCodeInput.parse(p);
+      return wrap(() => codeMemoWithEntry(state.getDb(), input.memoId, input.themes));
+    },
     'journals:build': (p) =>
       wrap(() => buildDailyJournal(state.getDb(), JournalDateInput.parse(p).date)),
     'participants:upsert': (p) =>
