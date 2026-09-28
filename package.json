@@ -4,7 +4,14 @@
   "packageManager": "pnpm@11.6.0",
   "engines": { "node": ">=22" },
   "scripts": {
+    "lint": "eslint .",
     "test": "pnpm -r run test",
     "typecheck": "pnpm -r run typecheck"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.0.0",
+    "eslint": "^9.0.0",
+    "globals": "^15.0.0",
+    "typescript-eslint": "^8.0.0"
   }
 }

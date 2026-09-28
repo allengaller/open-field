@@ -9,6 +9,9 @@ coverage/
 
 # Session / tooling artifacts
 .qoder/
+.mimosa/
+.v2c/
+.video_agent/
 
 # Meoo deploy binding (per-directory project binding)
 .env
