@@ -5,6 +5,14 @@ OpenField 的所有显著变更记录于此。体例遵循 [Keep a Changelog](ht
 
 ## [Unreleased]
 
+### Added
+- CI expanded from a single check job to three: `check` (eslint + typecheck + unit tests), `e2e` (all Electron E2E under xvfb on ubuntu; the packaged-app case self-skips without an artifact), and `packaged` (macOS arm64 build then `test:packaged` native-ABI gate).
+  CI 从单 job 扩为三个：`check`（eslint + typecheck + 单测）/ `e2e`（ubuntu + xvfb 跑全部 Electron E2E，打包产物用例无产物自动跳过）/ `packaged`（macOS arm64 出包后跑 `test:packaged` 原生 ABI 闸门）。
+- Minimal eslint baseline (flat config, typescript-eslint recommended): zero findings after removing three dead imports; wired into CI as `pnpm lint`.
+  最小 eslint 基线（flat config + typescript-eslint recommended）：清理三处死导入后全仓零告警，经 `pnpm lint` 接入 CI。
+- `syncTime` unit coverage via injected `offsetFn`: offset lands in record + `TIME_SYNC` entry; NTP-unreachable (null offset) throws and leaves no record or chain entry — closing the last untested service function.
+  `syncTime` 单测（注入 `offsetFn`）：偏移入库入链；NTP 不可达（null 偏移）抛错且不落记录与链条目——服务层最后一个无测试函数补齐。
+
 ### Fixed
 - The smoke E2E now asserts the pending list instead of scan counters: the inbox watcher may ingest the fixture before the manual scan, making the scan summary legitimately show `pending:0`.
   冒烟 E2E 改为断言待确认列表而非扫描统计：收件箱 watcher 可能在手动扫描前抢先入库，此时扫描统计合法地显示 `pending:0`。
