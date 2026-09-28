@@ -1,7 +1,8 @@
 import { describe, it, expect, afterAll } from 'vitest';
 import { verifyChain } from '@openfield/core';
 import { cleanupTestVault, makeTestVault } from './helpers';
-import { appendEntry, getLastEntry, listEvidenceEntries, recordTimeSync } from '../src/main/services/evidence';
+import { appendEntry, getLastEntry, listEvidenceEntries, recordTimeSync, syncTime } from '../src/main/services/evidence';
+import { listTimeSyncRecords } from '../src/main/services/repos';
 
 const { db, home } = makeTestVault();
 afterAll(() => cleanupTestVault(home));
@@ -42,5 +43,26 @@ describe('recordTimeSync', () => {
     expect(record.offsetMs).toBe(-320);
     expect(entry.action).toBe('TIME_SYNC');
     expect(listEvidenceEntries(db).length).toBe(before + 1);
+  });
+});
+
+describe('syncTime', () => {
+  it('NTP 偏移经注入的 offsetFn 获取后入库入链（服务器名透传）', async () => {
+    const before = listEvidenceEntries(db).length;
+    const { record, entry } = await syncTime(db, { host: 'pool.example', offsetFn: async () => 1500 });
+    expect(record.ntpServer).toBe('pool.example');
+    expect(record.offsetMs).toBe(1500);
+    expect(entry.action).toBe('TIME_SYNC');
+    expect(listEvidenceEntries(db).length).toBe(before + 1);
+    expect(listTimeSyncRecords(db).some((r) => r.id === record.id)).toBe(true);
+    expect(verifyChain(listEvidenceEntries(db)).ok).toBe(true);
+  });
+
+  it('NTP 不可达（offsetFn 返回 null）→ 抛错且不落任何记录（离线田野预期路径）', async () => {
+    const entriesBefore = listEvidenceEntries(db).length;
+    const recordsBefore = listTimeSyncRecords(db).length;
+    await expect(syncTime(db, { offsetFn: async () => null as unknown as number })).rejects.toThrow();
+    expect(listEvidenceEntries(db).length).toBe(entriesBefore); // 链不变
+    expect(listTimeSyncRecords(db).length).toBe(recordsBefore); // 校时记录不落半条
   });
 });

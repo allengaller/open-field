@@ -322,6 +322,19 @@ export function insertTimeSyncRecord(db: Database.Database, r: TimeSyncRecord): 
   db.prepare('INSERT INTO time_sync_records (id, checked_at, ntp_server, offset_ms) VALUES (?, ?, ?, ?)').run(v.id, v.checkedAt, v.ntpServer, v.offsetMs);
 }
 
+function rowToTimeSync(r: Row): TimeSyncRecord {
+  return TimeSyncRecord.parse({
+    id: str(r.id),
+    checkedAt: num(r.checked_at),
+    ntpServer: str(r.ntp_server),
+    offsetMs: num(r.offset_ms),
+  });
+}
+
+export function listTimeSyncRecords(db: Database.Database): TimeSyncRecord[] {
+  return (db.prepare('SELECT * FROM time_sync_records ORDER BY checked_at').all() as Row[]).map(rowToTimeSync);
+}
+
 // ---------- IfAbsent（bundle 应用等幂等场景用：返回是否新插入） ----------
 
 // table 只能由本文件内的字面量调用方传入，不得来自外部输入（防注入约定）
