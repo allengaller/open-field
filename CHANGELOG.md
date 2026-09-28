@@ -6,6 +6,8 @@ OpenField 的所有显著变更记录于此。体例遵循 [Keep a Changelog](ht
 ## [Unreleased]
 
 ### Added
+- Runtime IPC response validation: every channel now has a zod schema in `shared/schemas.ts` (`Record<IpcChannel, …>` — a missing channel fails to compile); the renderer's `invoke` parses responses against the schema (quiet variant degrades silently); UI payload types in `shared/types.ts` are now `z.infer` forwards, making the schema the single source of truth. A new drift-pinning test invokes every live channel handler (demo dataset, real ingest paths) and asserts the envelope + schema; a new channel absent from the pin set fails the test. `time:sync` (NTP) and `backup:pick` (native dialog) are exempt from live invocation and covered by the syncTime unit test and E2E respectively.
+  IPC 响应运行时校验：`shared/schemas.ts` 为每个通道定义 zod schema（`Record<IpcChannel, …>`，缺通道编译即错）；renderer `invoke` 按通道 parse（静默版失配静默降级）；`shared/types.ts` 的 UI 载荷类型改为 schema `z.infer` 转发，schema 成为唯一事实源。新增漂移钉死测试：逐通道实调 handler（演示数据 + 真实入库路径），断言信封与 schema；新通道不进钉死集测试即红。`time:sync`（NTP）与 `backup:pick`（原生对话框）豁免实调，分别由 syncTime 注入用例与 E2E 覆盖。
 - CI expanded from a single check job to three: `check` (eslint + typecheck + unit tests), `e2e` (all Electron E2E under xvfb on ubuntu; the packaged-app case self-skips without an artifact), and `packaged` (macOS arm64 build then `test:packaged` native-ABI gate).
   CI 从单 job 扩为三个：`check`（eslint + typecheck + 单测）/ `e2e`（ubuntu + xvfb 跑全部 Electron E2E，打包产物用例无产物自动跳过）/ `packaged`（macOS arm64 出包后跑 `test:packaged` 原生 ABI 闸门）。
 - Minimal eslint baseline (flat config, typescript-eslint recommended): zero findings after removing three dead imports; wired into CI as `pnpm lint`.

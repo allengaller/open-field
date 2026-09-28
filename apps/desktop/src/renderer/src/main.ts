@@ -7,7 +7,8 @@ import '@fontsource/jetbrains-mono/500.css';
 import './style.css';
 import { restoreErrorText, validateRestoreForm } from './restore';
 import { bindKnowledgeDeps, initKnowledge, mountMethodCards } from './knowledge';
-import type { IpcResult } from '../../shared/ipc';
+import type { IpcChannel, IpcResult } from '../../shared/ipc';
+import { IPC_RESPONSE_SCHEMAS } from '../../shared/schemas';
 import type {
   Artifact as ArtifactRow,
   ConsentRecord as ConsentRow,
@@ -27,20 +28,25 @@ const $ = (id: string): HTMLElement => {
 
 const statusEl = $('status') as HTMLPreElement;
 
-async function invoke<T>(channel: string, payload?: unknown): Promise<T> {
-  const res = (await window.openfield.invoke(channel, payload)) as IpcResult<T>;
+// 运行时校验（A31）：按通道查 shared/schemas 的 zod schema，服务返回形状漂移在
+// renderer 侧即刻暴露，而不是渲染出残缺界面。类型仍由调用方泛型声明（schema 钉死
+// 测试保证 schema 与服务一致，此处 as 仅在 schema 与泛型本应一致的前提下成立）。
+async function invoke<T>(channel: IpcChannel, payload?: unknown): Promise<T> {
+  const res = (await window.openfield.invoke(channel, payload)) as IpcResult<unknown>;
   if (!res.ok) {
     setReadout(`错误：${res.error}`, 'is-error');
     toast(res.error);
     throw new Error(res.error);
   }
-  return res.data;
+  return IPC_RESPONSE_SCHEMAS[channel].parse(res.data) as T;
 }
 
-/* 静默版：锁定态下轮询类查询失败时不打扰（读出行与 toast 都不出） */
-async function invokeQuiet<T>(channel: string, payload?: unknown): Promise<T | null> {
-  const res = (await window.openfield.invoke(channel, payload)) as IpcResult<T>;
-  return res.ok ? res.data : null;
+/* 静默版：锁定态下轮询类查询失败时不打扰（读出行与 toast 都不出）；schema 失配同错误路径静默降级 */
+async function invokeQuiet<T>(channel: IpcChannel, payload?: unknown): Promise<T | null> {
+  const res = (await window.openfield.invoke(channel, payload)) as IpcResult<unknown>;
+  if (!res.ok) return null;
+  const parsed = IPC_RESPONSE_SCHEMAS[channel].safeParse(res.data);
+  return parsed.success ? (parsed.data as T) : null;
 }
 
 function setReadout(text: string, tone?: 'is-error' | 'is-ok'): void {
