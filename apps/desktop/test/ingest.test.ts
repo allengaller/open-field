@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { Encounter, FieldEvent, verifyChain } from '@openfield/core';
 import { cleanupTestVault, makeTestVault } from './helpers';
 import { listEvidenceEntries } from '../src/main/services/evidence';
-import { getArtifact, getInboxItem, insertEncounter, insertFieldEvent, insertInboxItem, listArtifacts } from '../src/main/services/repos';
+import { getInboxItem, insertEncounter, insertFieldEvent, insertInboxItem, listArtifacts } from '../src/main/services/repos';
 import { confirmInboxItem, guessArtifactType, ingestFile, IngestError, rejectInboxItem } from '../src/main/services/ingest';
 
 const { db, paths, home } = makeTestVault();

@@ -16,7 +16,6 @@ import type {
   FieldEvent as FieldEventRow,
   InboxItem as PendingItem,
   Memo as MemoRow,
-  Participant as ParticipantRow,
 } from '@openfield/core';
 import type { DetailPayload, MockFootprint, MockSummary, ResearchPayload, TimeSyncPayload, TimelineRow, VaultStatus } from '../../shared/types';
 

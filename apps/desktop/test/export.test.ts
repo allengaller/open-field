@@ -9,7 +9,7 @@ import { cleanupTestVault, makeTestVault, TEST_PASSPHRASE } from './helpers';
 import { ingestFile, sha256File } from '../src/main/services/ingest';
 import { listEvidenceEntries } from '../src/main/services/evidence';
 import { getArtifact, insertConsentRecord, insertEncounter, insertFieldEvent, withdrawConsent } from '../src/main/services/repos';
-import { ExportError, exportBackup, makeCitation, readBackup, restoreBackup } from '../src/main/services/export';
+import { exportBackup, makeCitation, readBackup, restoreBackup } from '../src/main/services/export';
 import { openVault, resolveVaultPaths } from '../src/main/services/vault';
 import { runVerify } from '../src/main/services/verify';
 
