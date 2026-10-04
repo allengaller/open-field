@@ -11,9 +11,10 @@ import { createIpcHandlers } from '../src/main/ipc';
 // IPC 响应 schema 漂移钉死：逐通道实调 handler（走演示数据与真实入库路径），
 // 断言信封 ok 且 data 通过对应 zod schema。服务返回形状一变，本测试即红——
 // schema 因此不可能与 handler 各自漂移。新增通道若未进覆盖集也会直接失败。
-// （time:sync 依赖 NTP、backup:pick 依赖 Electron dialog，无法在 Node 单测实调，
+// （time:sync 依赖 NTP、backup:pick 依赖 Electron dialog、vault:unlock-saved 依赖
+//  safeStorage（OS 钥匙串），无法在 Node 单测实调，
 //  其形状分别由 evidence.test 的 syncTime 注入用例与 restore E2E 覆盖。）
-const LIVE_EXEMPT: readonly IpcChannel[] = ['time:sync', 'backup:pick'];
+const LIVE_EXEMPT: readonly IpcChannel[] = ['time:sync', 'backup:pick', 'vault:unlock-saved'];
 
 function localDate(): string {
   const d = new Date();
@@ -45,6 +46,7 @@ describe('IPC 响应 schema 全通道钉死', () => {
 
     // 锁定态 → 建库 → 演示数据
     await expectOk('vault:status');
+    await expectOk('vault:saved-key-status'); // A36 记住口令：Node 测试环境 saved:false 亦过 schema
     await expectOk('vault:create', { passphrase: 'passphrase-1234' });
     await expectOk('mock:load');
     await expectOk('mock:status');
@@ -56,6 +58,10 @@ describe('IPC 响应 schema 全通道钉死', () => {
     await expectOk('participants:set-real-name', { pseudonym: 'P-777', realName: '测试真名' });
     const consent = (await expectOk('consents:record', { encounterId: 'enc-schema', templateType: 'recording', scope: '仅测试' })) as { id: string };
     await expectOk('consents:withdraw', { consentId: consent.id });
+
+    // A34 应用级设置
+    await expectOk('settings:set', { deviceAlias: 'Schema 机', autoLockMinutes: 0 });
+    await expectOk('settings:get');
 
     // 档案 / 链 / 校验 / 引用（幂等路径）
     await expectOk('archive:events');
@@ -90,6 +96,8 @@ describe('IPC 响应 schema 全通道钉死', () => {
     state.close();
     await expectOk('vault:open', { passphrase: 'passphrase-1234' });
     await expectOk('vault:status');
+    await expectOk('vault:saved-key-status');
+    await expectOk('vault:forget-saved'); // 无记住文件时为 no-op，返回 undefined
 
     const fresh = new AppState(join(root, 'fresh'));
     const res = await createIpcHandlers(fresh)['backup:restore']({

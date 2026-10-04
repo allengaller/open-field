@@ -209,6 +209,11 @@ export function assertSafeHtml(html: string, where: string): void {
   if (/<script/i.test(html) || /javascript:/i.test(html)) {
     throw new Error(`不安全 HTML 输出：${where}`);
   }
+  // 事件处理器属性注入（A33）：marked 默认透传原始 HTML，源文档若夹带
+  // <img onerror=…> 之类标签会一路进渲染层，构建期直接拒绝。
+  if (/<[a-zA-Z][^>]*\son[a-z]+\s*=/i.test(html)) {
+    throw new Error(`不安全 HTML 输出（事件处理器属性）：${where}`);
+  }
 }
 
 export function chapterIdOf(relPath: string): string {

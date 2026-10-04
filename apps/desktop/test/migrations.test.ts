@@ -14,21 +14,21 @@ function tableNames(db: Database.Database): string[] {
 }
 
 describe('applyMigrations', () => {
-  it('全量迁移建出全部 12 张表并记录最高版本', () => {
+  it('全量迁移建出全部 13 张表并记录最高版本', () => {
     applyMigrations(db);
     const names = tableNames(db);
-    for (const t of ['field_events', 'encounters', 'artifacts', 'participants', 'participant_identity', 'consent_records', 'memos', 'inbox_items', 'time_sync_records', 'evidence_log', 'ref_sequences', 'schema_migrations']) {
+    for (const t of ['field_events', 'encounters', 'artifacts', 'participants', 'participant_identity', 'consent_records', 'memos', 'inbox_items', 'time_sync_records', 'evidence_log', 'ref_sequences', 'app_settings', 'schema_migrations']) {
       expect(names).toContain(t);
     }
     const version = db.prepare('SELECT MAX(version) AS v FROM schema_migrations').get() as { v: number };
-    expect(version.v).toBe(3);
+    expect(version.v).toBe(4);
   });
 
   it('重复执行幂等', () => {
     applyMigrations(db);
     expect(() => applyMigrations(db)).not.toThrow();
     const count = db.prepare('SELECT COUNT(*) AS n FROM schema_migrations').get() as { n: number };
-    expect(count.n).toBe(3);
+    expect(count.n).toBe(4);
   });
 
   it('v2 回填 ref_sequences：从既有标准 ref_id 解析每 date_city 最高序号，忽略非标准值', () => {

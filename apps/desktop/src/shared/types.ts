@@ -4,9 +4,11 @@
 // 实体类型直接从 @openfield/core 导入，不在此复制。
 export type {
   VaultStatus,
+  SavedKeyStatus,
   ScanSummary,
   MockSummary,
   MockFootprint,
+  AppSettings,
   DetailPayload,
   TimeSyncPayload,
   ResearchPayload,

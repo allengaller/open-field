@@ -24,6 +24,11 @@ export const VaultStatus = z.object({
   pendingInbox: z.number(),
 });
 
+export const SavedKeyStatus = z.object({
+  saved: z.boolean(),
+  home: z.string(),
+});
+
 export const ScanSummary = z.object({
   pending: z.number(),
   quarantined: z.number(),
@@ -47,6 +52,12 @@ export const MockFootprint = z.object({
   events: z.number(),
   encounters: z.number(),
   artifacts: z.number(),
+});
+
+// A34 应用级设置：设备代号（null = 未设，回落主机名）+ 自动锁定分钟数（0 = 关闭）
+export const AppSettings = z.object({
+  deviceAlias: z.string().nullable(),
+  autoLockMinutes: z.number().int().min(0),
 });
 
 const VerifyReport = z.object({
@@ -106,6 +117,9 @@ const ResearchPayloadSchema = z.object({
 export const IPC_RESPONSE_SCHEMAS: Record<IpcChannel, z.ZodTypeAny> = {  'vault:create': VaultStatus,
   'vault:open': VaultStatus,
   'vault:status': VaultStatus,
+  'vault:saved-key-status': SavedKeyStatus,
+  'vault:unlock-saved': VaultStatus,
+  'vault:forget-saved': z.undefined(),
   'events:create': WithEntry('event', FieldEvent),
   'encounters:create': WithEntry('encounter', Encounter),
   'inbox:scan': ScanSummary,
@@ -132,6 +146,8 @@ export const IPC_RESPONSE_SCHEMAS: Record<IpcChannel, z.ZodTypeAny> = {  'vault:
   'participants:set-real-name': z.object({ pseudonym: z.string() }),
   'consents:record': ConsentRecord,
   'consents:withdraw': WithEntry('consent', ConsentRecord),
+  'settings:get': AppSettings,
+  'settings:set': AppSettings,
   'time:sync': TimeSyncPayload,
   'mock:load': MockSummary,
   'mock:clear': z.undefined(),
@@ -140,9 +156,11 @@ export const IPC_RESPONSE_SCHEMAS: Record<IpcChannel, z.ZodTypeAny> = {  'vault:
 
 // UI 载荷类型唯一定义处：shared/types.ts 从这里转发，杜绝「schema 与 interface 各自手抄」。
 export type VaultStatus = z.infer<typeof VaultStatus>;
+export type SavedKeyStatus = z.infer<typeof SavedKeyStatus>;
 export type ScanSummary = z.infer<typeof ScanSummary>;
 export type MockSummary = z.infer<typeof MockSummary>;
 export type MockFootprint = z.infer<typeof MockFootprint>;
+export type AppSettings = z.infer<typeof AppSettings>;
 export type DetailPayload = z.infer<typeof DetailPayloadSchema>;
 export type TimeSyncPayload = z.infer<typeof TimeSyncPayload>;
 export type ResearchPayload = z.infer<typeof ResearchPayloadSchema>;

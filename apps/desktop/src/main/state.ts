@@ -2,17 +2,24 @@ import type Database from 'better-sqlite3-multiple-ciphers';
 import { existsSync, mkdirSync } from 'node:fs';
 import { hostname } from 'node:os';
 import { openVault, resolveVaultPaths } from './services/vault';
+import { actorIdOf } from './services/settings';
 import type { VaultStatus } from '../shared/types';
 
 export type { VaultStatus };
 
 export class AppState {
   readonly paths: ReturnType<typeof resolveVaultPaths>;
+  /** 兜底设备标识：仅当 vault 未解锁（读不到 app_settings）时使用 */
   readonly deviceId = hostname();
   private db: Database.Database | null = null;
 
   constructor(readonly home: string) {
     this.paths = resolveVaultPaths(home);
+  }
+
+  /** 证据链 actor / 采集物 deviceId 的实际取值：设备代号优先，回落主机名（A34） */
+  get actorId(): string {
+    return this.db ? actorIdOf(this.db, this.deviceId) : this.deviceId;
   }
 
   hasVault(): boolean {

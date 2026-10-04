@@ -145,4 +145,11 @@ describe('HTML 工具', () => {
     expect(() => assertSafeHtml('<script>x</script>', 'x')).toThrow();
     expect(() => assertSafeHtml('<a href="javascript:alert(1)">x</a>', 'x')).toThrow();
   });
+
+  it('assertSafeHtml 拦截事件处理器属性注入（A33），放行正文含 on 开头单词', () => {
+    expect(() => assertSafeHtml('<img src=x onerror=alert(1)>', 'x')).toThrow(/事件处理器属性/);
+    expect(() => assertSafeHtml('<div onload="x()">t</div>', 'x')).toThrow(/事件处理器属性/);
+    expect(() => assertSafeHtml('<p>继续 online=1 的说法</p>', 'x')).not.toThrow();
+    expect(() => assertSafeHtml('<a href="https://example.com" rel="noopener">x</a>', 'x')).not.toThrow();
+  });
 });

@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import { Artifact } from '@openfield/core';
 import { cleanupTestVault, makeTestVault, TEST_PASSPHRASE } from './helpers';
 import { clearMockData, loadMockData, mockFootprint } from '../src/main/services/mock';
+import { assertDevOnlyMockWrite } from '../src/main/ipc';
 import {
   getArtifact, insertArtifact, listArtifacts, listEncountersByEvent, listFieldEvents, listMemos, listParticipants,
 } from '../src/main/services/repos';
@@ -14,6 +15,11 @@ describe('mock 演示数据', () => {
   let db: Database;
   let home: string;
   let paths: ReturnType<typeof resolveVaultPaths>;
+
+  it('A32 打包版门禁：isPackaged 拒绝写入，开发/源码运行放行', () => {
+    expect(() => assertDevOnlyMockWrite(true)).toThrow(/演示数据仅限开发环境/);
+    expect(() => assertDevOnlyMockWrite(false)).not.toThrow();
+  });
 
   beforeEach(() => {
     const vault = makeTestVault();

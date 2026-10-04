@@ -4,10 +4,16 @@ import { resolveHome } from './home';
 import { AppState } from './state';
 import { createIpcHandlers } from './ipc';
 import { startInboxWatcher } from './watcher';
+import { getSettings } from './services/settings';
 import { IPC_CHANNELS } from '../shared/ipc';
 
 const state = new AppState(resolveHome(process.argv, join(app.getPath('userData'), 'openfield')));
 let stopWatcher: (() => void) | null = null;
+
+// A37 会话自动锁定：任意 IPC 活动刷新 lastActivity，空闲超过 app_settings.auto_lock_minutes
+// （0=关闭）即关库并向 renderer 广播 vault:locked。tick 内读设置失败不臆断锁定（静默重试）。
+const IDLE_TICK_MS = 30_000;
+let lastActivity = Date.now();
 
 function createWindow(): BrowserWindow {
   const win = new BrowserWindow({
@@ -48,10 +54,31 @@ function createWindow(): BrowserWindow {
 void app.whenReady().then(() => {
   const handlers = createIpcHandlers(state);
   for (const channel of IPC_CHANNELS) {
-    ipcMain.handle(channel, (_event, payload: unknown) => handlers[channel](payload));
+    ipcMain.handle(channel, (_event, payload: unknown) => {
+      lastActivity = Date.now();
+      return handlers[channel](payload);
+    });
   }
   const win = createWindow();
   stopWatcher = startInboxWatcher(state, (s) => win.webContents.send('inbox:changed', s));
+
+  const idleTimer = setInterval(() => {
+    if (!state.unlocked) return;
+    let minutes: number;
+    try {
+      minutes = getSettings(state.getDb()).autoLockMinutes;
+    } catch {
+      return;
+    }
+    if (minutes <= 0) return;
+    if (Date.now() - lastActivity > minutes * 60_000) {
+      state.close();
+      lastActivity = Date.now();
+      if (!win.isDestroyed()) win.webContents.send('vault:locked');
+    }
+  }, IDLE_TICK_MS);
+
+  app.on('will-quit', () => clearInterval(idleTimer));
 });
 
 app.on('window-all-closed', () => {

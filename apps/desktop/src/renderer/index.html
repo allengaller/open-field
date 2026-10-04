@@ -55,10 +55,17 @@
                     <input class="input" id="pass" type="password" placeholder="≥ 8 字符" autocomplete="off" />
                     <p class="field__help">解锁或创建时使用</p>
                   </div>
+                  <div class="field">
+                    <label class="field__label" for="remember-key">记住口令</label>
+                    <input id="remember-key" type="checkbox" />
+                    <p class="field__help">经系统安全存储加密保存到本机，只对本机生效</p>
+                  </div>
                 </div>
                 <div class="rows__actions">
                   <button class="btn btn--primary" id="btn-create">创建资料库</button>
                   <button class="btn" id="btn-open">解锁</button>
+                  <button class="btn" id="btn-unlock-saved">用记住的口令解锁</button>
+                  <button class="btn" id="btn-forget-saved">清除记住的口令</button>
                   <button class="btn" id="btn-status">刷新状态</button>
                   <button class="btn" id="btn-backup">导出备份</button>
                   <button class="btn" id="btn-timesync">时间同步</button>
@@ -89,6 +96,26 @@
                   <button class="btn" id="btn-restore">从备份恢复…</button>
                   <button class="btn btn--primary" id="btn-restore-run" hidden>执行恢复</button>
                 </div>
+              </section>
+              <section class="panel">
+                <h3>设备与锁定</h3>
+                <p class="panel__hint">
+                  设备代号会替代本机主机名，作为证据链 actor 与采集物 deviceId 入库——主机名常含真名，不属于应入链的信息。
+                  自动锁定：资料库闲置指定分钟数后自动上锁，0 = 不锁定。
+                </p>
+                <div class="formgrid">
+                  <div class="field">
+                    <label class="field__label" for="set-alias">设备代号</label>
+                    <input class="input" id="set-alias" placeholder="如：田野机-A" autocomplete="off" />
+                    <p class="field__help">≤128 字符，不得含 | 或换行；清空保存即恢复主机名</p>
+                  </div>
+                  <div class="field">
+                    <label class="field__label" for="set-autolock">自动锁定（分钟）</label>
+                    <input class="input" id="set-autolock" placeholder="15" inputmode="numeric" />
+                    <p class="field__help">0 = 关闭自动锁定</p>
+                  </div>
+                </div>
+                <div class="rows__actions"><button class="btn btn--primary" id="btn-settings-save">保存设置</button></div>
               </section>
               <section class="panel">
                 <h3>演示数据</h3>

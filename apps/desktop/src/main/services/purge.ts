@@ -64,5 +64,10 @@ export function purgeSubject(
     appendEntry(db, { ts: input.ts ?? Date.now(), actor: input.actor, action: 'PURGE_SUBJECT', payloadHash: computePayloadHash(scope) });
   });
   tx();
+  // A35：清除后收缩库文件并截断 WAL，已删页内容不再留在 db/wal 文件中。
+  // 必须在事务外执行（VACUUM 不能在事务内运行）。注意这仍是逻辑删除：
+  // SSD 磨损均衡、文件系统快照与旧备份可能保留副本，见威胁模型 §PIPL。
+  db.pragma('wal_checkpoint(TRUNCATE)');
+  db.exec('VACUUM');
   return scope;
 }

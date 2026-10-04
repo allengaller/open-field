@@ -131,6 +131,12 @@ GROUP BY substr(ref_id, 4, 8), substr(ref_id, 13, 3);
     // 主题编码（研究台）：备忘录的主题标签，JSON 数组存储，空数组为未编码。
     sql: `ALTER TABLE memos ADD COLUMN themes TEXT NOT NULL DEFAULT '[]';`,
   },
+  {
+    version: 4,
+    // A34 应用级设置：设备代号、自动锁定分钟数等本机偏好，存加密库内随库走。
+    // value 一律 TEXT，解析与校验在 services/settings.ts；读写经 IPC settings:*。
+    sql: `CREATE TABLE app_settings (key TEXT PRIMARY KEY, value TEXT NOT NULL);`,
+  },
 ];
 
 export function applyMigrations(db: Database.Database): void {
